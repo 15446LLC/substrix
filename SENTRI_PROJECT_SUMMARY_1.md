@@ -62,15 +62,34 @@ Displays a list of all accounts that require reconciliation (bank accounts, cred
 2. ✅ Create Sentri app in developer dashboard
 3. ✅ Retrieve development OAuth credentials (Client ID + Client Secret)
 4. ✅ Configure Redirect URI: `http://localhost:3000/callback`
-5. ⬜ Set up Node.js project locally
-6. ⬜ Build OAuth 2.0 authentication flow
-7. ⬜ Connect to QBO sandbox (test data)
-8. ⬜ Build account-fetching logic
-9. ⬜ Build reconciliation data logic
-10. ⬜ Build unreconciled transaction logic + health scoring
-11. ⬜ Build frontend dashboard
-12. ⬜ Deploy to live URL
+5. ✅ Set up Node.js project locally
+6. ✅ Build OAuth 2.0 authentication flow
+7. ✅ Connect to QBO sandbox (test data)
+8. ✅ Build account-fetching logic
+9. ✅ Build reconciliation data logic
+10. ✅ Build unreconciled transaction logic + health scoring
+11. ✅ Build frontend dashboard
+12. ✅ Deploy to live URL — https://sentri-hefh.onrender.com (Render free tier)
 13. ⬜ Submit to Intuit App Marketplace
+
+---
+
+## Status as of June 12, 2026
+
+- **Deployed**: Sentri runs live at https://sentri-hefh.onrender.com (Render, free tier — spins down after inactivity, ~50s cold start).
+- **GitHub**: source at github.com/15446LLC/sentri, `main` branch auto-deploys to Render.
+- **Sandbox**: OAuth + dashboard verified end-to-end against Intuit sandbox company (4 accounts: Checking, Savings, Mastercard, Visa — all show "Never reconciled" since sandbox has no rec history).
+- **Production credentials**: Unlocked via Intuit's App Details + Compliance questionnaire. Production Client ID/Secret added to Render env vars (`ENVIRONMENT=production`). Production redirect URI `https://sentri-hefh.onrender.com/callback` registered in Intuit.
+- **Domain**: `sentri.15446.com` registered as host domain in Intuit App URLs (dev), but NOT yet pointed via DNS to Render — app URLs there are placeholders pending DNS setup. Live URL for now is the onrender.com one.
+- **Not yet tested**: Real QBO account connection via production credentials (next step — click "Connect to QuickBooks" on the live URL and log in with real Intuit account).
+
+### Known gaps / follow-ups
+- Reconciliation integrity (broken-rec detection) — not built yet (planned v2 per notes above).
+- No handling for expired refresh tokens / invalid grant errors — currently surfaces as generic 500.
+- No CSRF state validation on OAuth callback (`state=sentri` is set but not checked).
+- `intuit_tid` not captured from QBO response headers for support/troubleshooting.
+- No in-app support/contact link.
+- Sessions are in-memory (`express-session` with no store) — restarts log everyone out; fine for now, revisit before real users.
 
 ---
 
