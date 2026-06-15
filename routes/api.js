@@ -37,11 +37,11 @@ router.get('/api/gl-raw/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/api/last-rec/:id', requireAuth, async (req, res) => {
+router.get('/api/txn-list/:id', requireAuth, async (req, res) => {
   try {
-    const { qboQuery } = require('../lib/qbo');
-    const data = await qboQuery(req.session, `SELECT LastReconciledDate FROM Account WHERE Id = '${req.params.id}'`);
-    res.json(data);
+    const { fetchTransactionList } = require('../lib/qbo');
+    const report = await fetchTransactionList(req.session, req.params.id);
+    res.json(report);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
