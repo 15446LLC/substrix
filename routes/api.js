@@ -27,6 +27,16 @@ router.get('/api/account-raw/:id', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/api/rec-report/:id', requireAuth, async (req, res) => {
+  try {
+    const { fetchReconciliationReport } = require('../lib/qbo');
+    const report = await fetchReconciliationReport(req.session, req.params.id);
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/api/reconciliation', requireAuth, async (req, res) => {
   try {
     const data = await buildReconciliationHealth(req.session);
