@@ -27,6 +27,16 @@ router.get('/api/account-raw/:id', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/api/gl-raw/:id', requireAuth, async (req, res) => {
+  try {
+    const { fetchGeneralLedger } = require('../lib/qbo');
+    const report = await fetchGeneralLedger(req.session, req.params.id, null);
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/api/rec-report/:id', requireAuth, async (req, res) => {
   try {
     const { fetchReconciliationReport } = require('../lib/qbo');
