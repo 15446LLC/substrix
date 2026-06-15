@@ -7,6 +7,16 @@ function requireAuth(req, res, next) {
   next();
 }
 
+router.get('/api/accounts-raw', requireAuth, async (req, res) => {
+  try {
+    const { fetchAccounts } = require('../lib/qbo');
+    const accounts = await fetchAccounts(req.session);
+    res.json(accounts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/api/reconciliation', requireAuth, async (req, res) => {
   try {
     const data = await buildReconciliationHealth(req.session);
