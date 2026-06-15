@@ -37,11 +37,11 @@ router.get('/api/gl-raw/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/api/txn-list/:id', requireAuth, async (req, res) => {
+router.get('/api/purchases-raw/:id', requireAuth, async (req, res) => {
   try {
-    const { fetchTransactionList } = require('../lib/qbo');
-    const report = await fetchTransactionList(req.session, req.params.id);
-    res.json(report);
+    const { qboQuery } = require('../lib/qbo');
+    const data = await qboQuery(req.session, `SELECT * FROM Purchase WHERE AccountRef.value = '${req.params.id}' MAXRESULTS 5`);
+    res.json(data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
