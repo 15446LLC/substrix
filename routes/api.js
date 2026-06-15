@@ -37,6 +37,16 @@ router.get('/api/gl-raw/:id', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/api/last-rec/:id', requireAuth, async (req, res) => {
+  try {
+    const { qboQuery } = require('../lib/qbo');
+    const data = await qboQuery(req.session, `SELECT LastReconciledDate FROM Account WHERE Id = '${req.params.id}'`);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/api/rec-report/:id', requireAuth, async (req, res) => {
   try {
     const { fetchReconciliationReport } = require('../lib/qbo');
