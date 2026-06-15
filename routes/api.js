@@ -9,9 +9,19 @@ function requireAuth(req, res, next) {
 
 router.get('/api/accounts-raw', requireAuth, async (req, res) => {
   try {
-    const { fetchAccounts } = require('../lib/qbo');
+    const { fetchAccounts, fetchAccountById } = require('../lib/qbo');
     const accounts = await fetchAccounts(req.session);
     res.json(accounts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/api/account-raw/:id', requireAuth, async (req, res) => {
+  try {
+    const { fetchAccountById } = require('../lib/qbo');
+    const account = await fetchAccountById(req.session, req.params.id);
+    res.json(account);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
