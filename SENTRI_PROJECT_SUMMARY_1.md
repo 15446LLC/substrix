@@ -91,6 +91,19 @@ Displays a list of all accounts that require reconciliation (bank accounts, cred
 - No in-app support/contact link.
 - Sessions are in-memory (`express-session` with no store) — restarts log everyone out; fine for now, revisit before real users.
 
+### QBO API Reconciliation Data — Known Limitation (as of 2026-06-15)
+The QBO API does not expose reconciliation dates or clearing status through any of the following:
+- `Account` entity: `LastReconciledDate` field does not exist (confirmed via query — "Property not found")
+- `GeneralLedger` report: `clr_status` column not returned even when requested
+- `TransactionList` report: same — no clearing status column
+- `Purchase`/transaction entities: no `ReconcileStatus` field on individual transactions
+- `ReconciliationDetail` report: returns error 5020 "Permission Denied" (even with admin QBO user on Advanced plan)
+- `ReconciliationSummary` report: same 5020 error
+
+**Next step to investigate**: Whether the 5020 error is due to (a) stale OAuth token — try fresh reconnect immediately before calling the endpoint, or (b) Intuit app review requirement — certain report endpoints may be locked until the app completes marketplace review.
+
+Several debug endpoints exist on the live app (accounts-raw, gl-raw, account-raw, rec-summary, purchase, etc.) — these should be cleaned up before any real users are added.
+
 ---
 
 ## Intuit Developer Portal
