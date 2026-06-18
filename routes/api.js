@@ -7,66 +7,6 @@ function requireAuth(req, res, next) {
   next();
 }
 
-router.get('/api/accounts-raw', requireAuth, async (req, res) => {
-  try {
-    const { fetchAccounts, fetchAccountById } = require('../lib/qbo');
-    const accounts = await fetchAccounts(req.session);
-    res.json(accounts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/api/account-raw/:id', requireAuth, async (req, res) => {
-  try {
-    const { fetchAccountById } = require('../lib/qbo');
-    const account = await fetchAccountById(req.session, req.params.id);
-    res.json(account);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/api/gl-raw/:id', requireAuth, async (req, res) => {
-  try {
-    const { fetchGeneralLedger } = require('../lib/qbo');
-    const report = await fetchGeneralLedger(req.session, req.params.id, null);
-    res.json(report);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/api/purchase/:id', requireAuth, async (req, res) => {
-  try {
-    const { fetchPurchase } = require('../lib/qbo');
-    const data = await fetchPurchase(req.session, req.params.id);
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/api/rec-summary/:id', requireAuth, async (req, res) => {
-  try {
-    const { fetchReconciliationSummary } = require('../lib/qbo');
-    const report = await fetchReconciliationSummary(req.session, req.params.id);
-    res.json(report);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/api/cleared/:id/:status', requireAuth, async (req, res) => {
-  try {
-    const { fetchTransactionListByCleared } = require('../lib/qbo');
-    const report = await fetchTransactionListByCleared(req.session, req.params.id, req.params.status);
-    res.json(report);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 router.get('/api/reconciliation', requireAuth, async (req, res) => {
   try {
     const data = await buildReconciliationHealth(req.session);
