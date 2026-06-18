@@ -57,6 +57,16 @@ router.get('/api/rec-summary/:id', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/api/cleared/:id/:status', requireAuth, async (req, res) => {
+  try {
+    const { fetchTransactionListByCleared } = require('../lib/qbo');
+    const report = await fetchTransactionListByCleared(req.session, req.params.id, req.params.status);
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/api/reconciliation', requireAuth, async (req, res) => {
   try {
     const data = await buildReconciliationHealth(req.session);
