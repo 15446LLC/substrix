@@ -104,6 +104,20 @@ The QBO API does not expose reconciliation dates or clearing status through any 
 
 Several debug endpoints exist on the live app (accounts-raw, gl-raw, account-raw, rec-summary, purchase, etc.) — these should be cleaned up before any real users are added.
 
+### Update — 2026-06-18: Found a working data source, but account filtering is broken
+
+Confirmed via Intuit docs/community research that the `TransactionList` report supports a `cleared` query parameter (`Reconciled` / `Cleared` / `Uncleared`) that correctly identifies reconciliation status — this is the right building block (no ReconcileStatus field exists elsewhere in the API).
+
+Rebuilt `lib/reconciliation.js` to fetch `TransactionList` filtered by `cleared=Reconciled` to derive last-rec-date, and `cleared=Uncleared` for the unreconciled list. Found and fixed two real bugs along the way:
+1. `cleared=UnCleared` is an invalid enum — must be `Uncleared` (lowercase c).
+2. `parseRows()` was indexing report columns by `col.ColType` (e.g. "Date", "Money") instead of the actual `ColKey` in `col.MetaData` (e.g. "tx_date", "subt_nat_amount") — this silently zeroed out every transaction's amount and dropped all rows. Fixed.
+
+**Current blocker**: After those fixes, every account returns *identical* data (same date, same 6288 transactions, same $30M sum) — meaning the `account=` filter parameter on the `TransactionList` report is not actually being respected by QBO's API (confirmed via web research: this is a known limitation, Intuit's own community has reported `TransactionList`'s account filter is unreliable).
+
+**In progress when session ended**: Testing whether the `GeneralLedger` report (which we proved DOES correctly filter by `account=`) also accepts the `cleared` parameter — if so, combining `GeneralLedger` + `cleared` filter could give us correct per-account reconciliation data. Added debug endpoint `/api/gl-cleared-test/:id` to test this — not yet confirmed working as of end of session (last user report was "still the same issue" i.e. still identical results across accounts, but this was before fully verifying the GL-based endpoint specifically).
+
+**Next session should start by**: hitting `/api/gl-cleared-test/750` and `/api/gl-cleared-test/1150040088` (two different real Shakuff accounts) and comparing — if GL+cleared gives genuinely distinct results per account, rewire `reconciliation.js` to use `fetchGeneralLedgerByCleared` instead of `fetchTransactionListByCleared`.
+
 ---
 
 ## Intuit Developer Portal
