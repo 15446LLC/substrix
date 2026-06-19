@@ -1,18 +1,29 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const OAuthClient = require('intuit-oauth');
 const oauthClient = require('../lib/oauthClient');
 const router = express.Router();
 
 router.get('/connect', (req, res) => {
+  const state = crypto.randomBytes(16).toString('hex');
+  req.session.oauthState = state;
   const authUri = oauthClient.authorizeUri({
     scope: [OAuthClient.scopes.Accounting],
-    state: 'sentri',
+    state,
   });
   res.redirect(authUri);
 });
 
 router.get('/callback', async (req, res) => {
+  const expectedState = req.session.oauthState;
+  delete req.session.oauthState;
+
+  if (!expectedState || req.query.state !== expectedState) {
+    console.error('OAuth callback state mismatch — possible CSRF attempt.');
+    return res.status(403).send('Authentication failed: invalid state. Please try connecting again.');
+  }
+
   try {
     const authResponse = await oauthClient.createToken(req.url);
     req.session.token = authResponse.getJson();

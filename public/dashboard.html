@@ -128,6 +128,7 @@
     </div>
     <div class="header-right">
       <span class="fetched-at" id="fetched-at"></span>
+      <a class="disconnect" href="mailto:i@15446.com?subject=Sentri%20Support">Support</a>
       <a class="disconnect" href="/disconnect">Disconnect</a>
     </div>
   </header>
@@ -221,11 +222,20 @@
       return `<span class="badge ${color}"><span class="dot"></span>${text}</span>`;
     }
 
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 401 && body.reconnect) {
+        window.location.href = '/connect';
+        throw new Error('Reconnecting to QuickBooks…');
+      }
+      if (!res.ok) throw new Error(body.error || res.statusText);
+      return body;
+    }
+
     async function load() {
       try {
-        const res = await fetch('/api/reconciliation');
-        if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-        const { accounts, fetchedAt } = await res.json();
+        const { accounts, fetchedAt } = await fetchJson('/api/reconciliation');
 
         document.getElementById('fetched-at').textContent =
           'Updated ' + new Date(fetchedAt).toLocaleTimeString();
@@ -276,11 +286,7 @@
 
     async function loadUndepositedFunds() {
       try {
-        const res = await fetch('/api/undeposited-funds');
-        if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-        const data = await res.json();
-
-        const { balance, buckets } = data;
+        const { balance, buckets } = await fetchJson('/api/undeposited-funds');
         const balanceColor = balance === 0 ? 'green' : (buckets.over12Months.sum > 0 ? 'red' : 'yellow');
 
         document.getElementById('uf-tbody').innerHTML = `
@@ -311,9 +317,7 @@
       `;
 
       try {
-        const res = await fetch('/api/unapplied-transactions');
-        if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-        const { customer, vendor } = await res.json();
+        const { customer, vendor } = await fetchJson('/api/unapplied-transactions');
 
         document.getElementById('ut-tbody').innerHTML =
           row('Customer (Payments + Credit Memos)', customer) + row('Vendor (Credits + Unlinked Payments)', vendor);
