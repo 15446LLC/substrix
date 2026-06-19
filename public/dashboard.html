@@ -183,27 +183,46 @@
     Undeposited Funds aren't covered yet.
   </p>
 
-  <h2 style="font-size:1.05rem;margin:32px 0 12px;">Unapplied Payments &amp; Credits</h2>
+  <h2 style="font-size:1.05rem;margin:32px 0 12px;">Unapplied Customer Payments &amp; Credits</h2>
   <div class="card">
-    <div class="loading" id="ut-loading">Loading…</div>
-    <table id="ut-table" style="display:none">
+    <div class="loading" id="ut-customer-loading">Loading…</div>
+    <table id="ut-customer-table" style="display:none">
       <thead>
         <tr>
-          <th>Side</th>
+          <th>Type</th>
           <th>&lt; 30 Days</th>
           <th>30 Days–12 Months</th>
           <th>&gt; 12 Months</th>
           <th>Total</th>
         </tr>
       </thead>
-      <tbody id="ut-tbody"></tbody>
+      <tbody id="ut-customer-tbody"></tbody>
     </table>
   </div>
   <p class="dim" style="font-size:0.8rem;margin-top:8px;">
-    Customer side: payments and credit memos not yet applied to an invoice overstate open AR. Vendor side:
-    vendor credits not applied to a bill, and vendor payments with no linked bill, understate what's actually
-    owed or leave cash unaccounted for. A few recent days is normal processing lag; anything over 12 months
-    is a real hygiene problem.
+    Payments and credit memos not yet applied to an invoice overstate open AR. A few recent days is normal
+    processing lag; anything over 12 months is a real hygiene problem.
+  </p>
+
+  <h2 style="font-size:1.05rem;margin:32px 0 12px;">Unapplied Vendor Payments &amp; Credits</h2>
+  <div class="card">
+    <div class="loading" id="ut-vendor-loading">Loading…</div>
+    <table id="ut-vendor-table" style="display:none">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>&lt; 30 Days</th>
+          <th>30 Days–12 Months</th>
+          <th>&gt; 12 Months</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="ut-vendor-tbody"></tbody>
+    </table>
+  </div>
+  <p class="dim" style="font-size:0.8rem;margin-top:8px;">
+    Vendor credits not applied to a bill, and vendor payments with no linked bill, understate what's actually
+    owed or leave cash unaccounted for.
   </p>
 
   <script>
@@ -300,28 +319,33 @@
     }
 
     async function loadUnappliedTransactions() {
+      const row = (label, data) => `
+        <tr>
+          <td><div class="account-name">${label}</div></td>
+          <td>${bucketBadge(data.buckets.last30Days, 'yellow')}</td>
+          <td>${bucketBadge(data.buckets.last30DaysTo12Months, 'red')}</td>
+          <td>${bucketBadge(data.buckets.over12Months, 'red')}</td>
+          <td>${data.totalSum === 0 ? '<span class="dim">—</span>' : `<span class="mono">${fmtCurrency(data.totalSum)}</span>`}</td>
+        </tr>
+      `;
+
       try {
         const res = await fetch('/api/unapplied-transactions');
         if (!res.ok) throw new Error((await res.json()).error || res.statusText);
         const { customer, vendor } = await res.json();
 
-        const row = (label, data) => `
-          <tr>
-            <td><div class="account-name">${label}</div></td>
-            <td>${bucketBadge(data.buckets.last30Days, 'yellow')}</td>
-            <td>${bucketBadge(data.buckets.last30DaysTo12Months, 'red')}</td>
-            <td>${bucketBadge(data.buckets.over12Months, 'red')}</td>
-            <td>${data.totalSum === 0 ? '<span class="dim">—</span>' : `<span class="mono">${fmtCurrency(data.totalSum)}</span>`}</td>
-          </tr>
-        `;
+        document.getElementById('ut-customer-tbody').innerHTML =
+          row('Unapplied Payments', customer.payments) + row('Unapplied Credit Memos', customer.creditMemos);
+        document.getElementById('ut-customer-loading').style.display = 'none';
+        document.getElementById('ut-customer-table').style.display = 'table';
 
-        document.getElementById('ut-tbody').innerHTML =
-          row('Customer (Payments + Credit Memos)', customer) + row('Vendor (Credits + Unlinked Payments)', vendor);
-
-        document.getElementById('ut-loading').style.display = 'none';
-        document.getElementById('ut-table').style.display = 'table';
+        document.getElementById('ut-vendor-tbody').innerHTML =
+          row('Unapplied Vendor Credits', vendor.vendorCredits) + row('Payments With No Linked Bill', vendor.unlinkedPayments);
+        document.getElementById('ut-vendor-loading').style.display = 'none';
+        document.getElementById('ut-vendor-table').style.display = 'table';
       } catch (err) {
-        document.getElementById('ut-loading').textContent = 'Error loading data: ' + err.message;
+        document.getElementById('ut-customer-loading').textContent = 'Error loading data: ' + err.message;
+        document.getElementById('ut-vendor-loading').textContent = 'Error loading data: ' + err.message;
       }
     }
 
