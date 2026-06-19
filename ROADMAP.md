@@ -86,6 +86,12 @@ A structured validation layer that every module feeds into, designed so a user c
 10. **Negative Balance / Sign Anomaly Detection** — a bank or AR balance going negative when it structurally shouldn't is often a symptom of misclassified transactions.
 11. **Payroll Liability Health** — real but narrower scope (one account family).
 12. **Tax Line Mapping** — affects tax-specific reports, not general financial statements.
+13. **Sales Tax Health** — explored 2026-06-19 (see [SENTRI_PROJECT_SUMMARY_1.md](SENTRI_PROJECT_SUMMARY_1.md)).
+    Wanted to cross-check Sales Tax Payable account balances against QBO's own computed liability, but
+    `TaxSummary`/`TaxLiabilityReport` both hit the same `Permission Denied 5020` wall as Module 1's
+    `ReconciliationDetail`/`Summary` reports — not buildable as originally scoped. `Account`, `TaxAgency`,
+    `TaxCode`, `TaxRate` entity queries all work fine, so a scoped-down version (flag negative or stale
+    Sales Tax Payable balances, without confirming the dollar amount itself) is still possible.
 13. **Fixed Assets & Depreciation** — slower-moving, less frequent source of error, narrower balance-sheet impact.
 14. **Inventory Health** (if applicable) — only relevant to users carrying inventory; scoped to COGS/balance sheet.
 

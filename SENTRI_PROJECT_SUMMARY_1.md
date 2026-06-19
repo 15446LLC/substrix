@@ -126,6 +126,19 @@ Hit `/api/gl-cleared-test/750` (Chase 5508 Operating) and `/api/gl-cleared-test/
 
 **Not yet verified**: a full end-to-end run of `/api/reconciliation` against the real company with the new GL-based logic — should be the first thing checked next session.
 
+### Update — 2026-06-19: Explored Sales Tax Health, hit the same report permission wall as reconciliation integrity
+
+Goal was a cross-check: compare each Sales Tax Payable liability account's `CurrentBalance` against QBO's own computed tax liability, to catch when the recorded balance doesn't match what's actually owed.
+
+Added `/api/debug-sales-tax` to probe what's available. Findings:
+- `Account` (filtered by name like "Sales Tax"), `TaxAgency`, `TaxCode`, and `TaxRate` entity queries all work fine and return real data. The real company (Shakuff) has several Sales Tax Payable accounts across jurisdictions (NY, NJ, Truckee CA, a generic one, a Channel/PayPal one) — most are $0, but **Sales Tax - NY Payable has a real $668.92 balance** (on the `Sales Tax - NY Payable:Sales Tax Payable` sub-account, `CurrentBalanceWithSubAccounts` on the parent).
+- Both `TaxSummary` and `TaxLiabilityReport` report endpoints return **`Permission Denied Error 5020`** — the exact same wall hit with `ReconciliationDetail`/`ReconciliationSummary` back on 2026-06-15. No QBO-computed tax liability number is accessible, so the cross-check as originally scoped isn't buildable with current API access.
+- As with the reconciliation integrity case, unclear whether this 5020 is a stale-token issue, an Advanced-plan/app-review gate, or a hard API limitation — not yet investigated further.
+
+**Scoped-down alternative discussed but not yet built**: since we can't get QBO's computed liability, fall back to checking what we *can* see — surface each Sales Tax Payable account's balance per jurisdiction, flag any negative balance (sign anomaly — a state owing the business money is suspicious), and flag balances that haven't changed in 90+ days (likely a missed filing/payment). This reuses the age-bucketing pattern from Modules 2/3 but can only flag "something looks off," not confirm the dollar amount is mathematically correct.
+
+**Next session should start by**: deciding whether to build the scoped-down version (negative/stale balance checks only) or first investigate the 5020 wall further (e.g. try a fresh OAuth reconnect immediately before calling the report, to rule out a stale-token cause) — same open question as the reconciliation integrity report wall.
+
 ---
 
 ## Intuit Developer Portal
