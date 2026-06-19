@@ -30,26 +30,30 @@ router.get('/api/undeposited-funds', requireAuth, async (req, res) => {
 });
 
 // Temporary debug endpoint: inspect real Payment/VendorCredit/BillPayment
-// shapes to figure out how to compute unapplied amounts.
+// shapes, and test whether UnappliedAmt/Balance are queryable server-side.
 router.get('/api/debug-unapplied', requireAuth, async (req, res) => {
   try {
     const token = await getValidToken(req.session);
-    const fetchSample = async (entity) => {
-      const query = encodeURIComponent(`SELECT * FROM ${entity} ORDERBY TxnDate DESC MAXRESULTS 5`);
-      const data = await qboGet(
-        `/v3/company/${req.session.realmId}/query?query=${query}&minorversion=65`,
-        token
-      );
-      return data.QueryResponse?.[entity] || [];
+    const tryQuery = async (label, queryStr) => {
+      try {
+        const query = encodeURIComponent(queryStr);
+        const data = await qboGet(
+          `/v3/company/${req.session.realmId}/query?query=${query}&minorversion=65`,
+          token
+        );
+        return { label, ok: true, count: Object.values(data.QueryResponse || {}).flat().length, sample: data.QueryResponse };
+      } catch (err) {
+        return { label, ok: false, error: err.message };
+      }
     };
 
-    const [payments, vendorCredits, billPayments] = await Promise.all([
-      fetchSample('Payment'),
-      fetchSample('VendorCredit'),
-      fetchSample('BillPayment'),
+    const results = await Promise.all([
+      tryQuery('Payment WHERE UnappliedAmt > 0', "SELECT * FROM Payment WHERE UnappliedAmt > '0' MAXRESULTS 10"),
+      tryQuery('VendorCredit WHERE Balance > 0', "SELECT * FROM VendorCredit WHERE Balance > '0' MAXRESULTS 10"),
+      tryQuery('BillPayment sample', 'SELECT * FROM BillPayment ORDERBY TxnDate DESC MAXRESULTS 5'),
     ]);
 
-    res.json({ payments, vendorCredits, billPayments });
+    res.json({ results });
   } catch (err) {
     console.error('Debug unapplied error:', err);
     res.status(500).json({ error: err.message });
