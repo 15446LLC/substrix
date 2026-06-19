@@ -1,6 +1,6 @@
 const express = require('express');
 const { buildReconciliationHealth } = require('../lib/reconciliation');
-const { fetchGeneralLedgerByCleared, getValidToken, qboGet } = require('../lib/qbo');
+const { getValidToken, qboGet } = require('../lib/qbo');
 const router = express.Router();
 
 function requireAuth(req, res, next) {
@@ -18,27 +18,45 @@ router.get('/api/reconciliation', requireAuth, async (req, res) => {
   }
 });
 
-// Temporary debug endpoint to test cleared-filter behavior on Undeposited Funds.
+// Temporary debug endpoint: check whether Payment.LinkedTxn correctly identifies
+// payments still sitting in Undeposited Funds (no linked Deposit).
 router.get('/api/debug-undeposited-funds', requireAuth, async (req, res) => {
   try {
     const token = await getValidToken(req.session);
-    const query = encodeURIComponent(
+    const accountQuery = encodeURIComponent(
       "SELECT * FROM Account WHERE Name = 'Undeposited Funds' MAXRESULTS 10"
     );
     const accountData = await qboGet(
-      `/v3/company/${req.session.realmId}/query?query=${query}&minorversion=65`,
+      `/v3/company/${req.session.realmId}/query?query=${accountQuery}&minorversion=65`,
       token
     );
     const account = accountData.QueryResponse?.Account?.[0];
     if (!account) return res.status(404).json({ error: 'Undeposited Funds account not found' });
 
-    const [reconciled, cleared, uncleared] = await Promise.all([
-      fetchGeneralLedgerByCleared(req.session, account.Id, 'Reconciled'),
-      fetchGeneralLedgerByCleared(req.session, account.Id, 'Cleared'),
-      fetchGeneralLedgerByCleared(req.session, account.Id, 'Uncleared'),
-    ]);
+    const paymentQuery = encodeURIComponent(
+      `SELECT * FROM Payment WHERE DepositToAccountRef = '${account.Id}' ORDERBY TxnDate DESC MAXRESULTS 1000`
+    );
+    const paymentData = await qboGet(
+      `/v3/company/${req.session.realmId}/query?query=${paymentQuery}&minorversion=65`,
+      token
+    );
+    const payments = paymentData.QueryResponse?.Payment || [];
 
-    res.json({ account, reconciled, cleared, uncleared });
+    const unswept = payments.filter(p => !(p.LinkedTxn || []).some(lt => lt.TxnType === 'Deposit'));
+
+    res.json({
+      account,
+      totalFetched: payments.length,
+      unsweptCount: unswept.length,
+      unsweptSum: unswept.reduce((sum, p) => sum + (p.TotalAmt || 0), 0),
+      unswept: unswept.map(p => ({
+        id: p.Id,
+        date: p.TxnDate,
+        amount: p.TotalAmt,
+        customer: p.CustomerRef?.name,
+        linkedTxn: p.LinkedTxn,
+      })),
+    });
   } catch (err) {
     console.error('Debug undeposited funds error:', err);
     res.status(500).json({ error: err.message });
