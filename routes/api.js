@@ -33,20 +33,24 @@ router.get('/api/debug-undeposited-funds', requireAuth, async (req, res) => {
     const account = accountData.QueryResponse?.Account?.[0];
     if (!account) return res.status(404).json({ error: 'Undeposited Funds account not found' });
 
+    // DepositToAccountRef isn't queryable in QBO's query language, so fetch the
+    // most recent payments and filter client-side.
     const paymentQuery = encodeURIComponent(
-      `SELECT * FROM Payment WHERE DepositToAccountRef = '${account.Id}' ORDERBY TxnDate DESC MAXRESULTS 1000`
+      'SELECT * FROM Payment ORDERBY TxnDate DESC MAXRESULTS 1000'
     );
     const paymentData = await qboGet(
       `/v3/company/${req.session.realmId}/query?query=${paymentQuery}&minorversion=65`,
       token
     );
-    const payments = paymentData.QueryResponse?.Payment || [];
+    const allPayments = paymentData.QueryResponse?.Payment || [];
+    const payments = allPayments.filter(p => p.DepositToAccountRef?.value === account.Id);
 
     const unswept = payments.filter(p => !(p.LinkedTxn || []).some(lt => lt.TxnType === 'Deposit'));
 
     res.json({
       account,
-      totalFetched: payments.length,
+      totalPaymentsFetched: allPayments.length,
+      undepositedFundsPayments: payments.length,
       unsweptCount: unswept.length,
       unsweptSum: unswept.reduce((sum, p) => sum + (p.TotalAmt || 0), 0),
       unswept: unswept.map(p => ({
