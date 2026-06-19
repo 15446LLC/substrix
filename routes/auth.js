@@ -2,13 +2,13 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const OAuthClient = require('intuit-oauth');
-const oauthClient = require('../lib/oauthClient');
+const createOAuthClient = require('../lib/oauthClient');
 const router = express.Router();
 
 router.get('/connect', (req, res) => {
   const state = crypto.randomBytes(16).toString('hex');
   req.session.oauthState = state;
-  const authUri = oauthClient.authorizeUri({
+  const authUri = createOAuthClient().authorizeUri({
     scope: [OAuthClient.scopes.Accounting],
     state,
   });
@@ -25,7 +25,7 @@ router.get('/callback', async (req, res) => {
   }
 
   try {
-    const authResponse = await oauthClient.createToken(req.url);
+    const authResponse = await createOAuthClient().createToken(req.url);
     req.session.token = authResponse.getJson();
     req.session.realmId = req.query.realmId;
     res.redirect('/dashboard');

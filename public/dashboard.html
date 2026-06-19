@@ -286,7 +286,12 @@
 
     async function loadUndepositedFunds() {
       try {
-        const { balance, buckets } = await fetchJson('/api/undeposited-funds');
+        const result = await fetchJson('/api/undeposited-funds');
+        if (!result.buckets) {
+          document.getElementById('uf-loading').textContent = 'No "Undeposited Funds" account found on this company.';
+          return;
+        }
+        const { balance, buckets } = result;
         const balanceColor = balance === 0 ? 'green' : (buckets.over12Months.sum > 0 ? 'red' : 'yellow');
 
         document.getElementById('uf-tbody').innerHTML = `
