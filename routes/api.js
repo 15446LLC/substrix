@@ -7,26 +7,6 @@ function requireAuth(req, res, next) {
   next();
 }
 
-router.get('/api/cleared-test/:id', requireAuth, async (req, res) => {
-  try {
-    const { fetchTransactionListByCleared } = require('../lib/qbo');
-    const report = await fetchTransactionListByCleared(req.session, req.params.id, 'Reconciled');
-    res.json(report);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/api/gl-cleared-test/:id', requireAuth, async (req, res) => {
-  try {
-    const { fetchGeneralLedgerByCleared } = require('../lib/qbo');
-    const report = await fetchGeneralLedgerByCleared(req.session, req.params.id, 'Reconciled');
-    res.json(report);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 router.get('/api/reconciliation', requireAuth, async (req, res) => {
   try {
     const data = await buildReconciliationHealth(req.session);

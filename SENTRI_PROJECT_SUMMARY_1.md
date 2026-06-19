@@ -118,6 +118,14 @@ Rebuilt `lib/reconciliation.js` to fetch `TransactionList` filtered by `cleared=
 
 **Next session should start by**: hitting `/api/gl-cleared-test/750` and `/api/gl-cleared-test/1150040088` (two different real Shakuff accounts) and comparing — if GL+cleared gives genuinely distinct results per account, rewire `reconciliation.js` to use `fetchGeneralLedgerByCleared` instead of `fetchTransactionListByCleared`.
 
+### Update — 2026-06-19: Confirmed — GeneralLedger + cleared filter works, reconciliation logic rewired
+
+Hit `/api/gl-cleared-test/750` (Chase 5508 Operating) and `/api/gl-cleared-test/1150040088` (Citi 9850) directly against the real company. Results were genuinely distinct per account — Chase 5508 returned thousands of transactions back to 2017, Citi 9850 returned exactly one transaction ($176.59 on 2025-12-26). Confirms `GeneralLedger`'s `account=` filter is respected even with `cleared` applied, unlike `TransactionList`.
+
+`lib/reconciliation.js` now uses `fetchGeneralLedgerByCleared` (was `fetchTransactionListByCleared`). `fetchTransactionListByCleared` and the `/api/cleared-test/:id` and `/api/gl-cleared-test/:id` debug endpoints were removed from `lib/qbo.js` and `routes/api.js` now that the approach is confirmed.
+
+**Not yet verified**: a full end-to-end run of `/api/reconciliation` against the real company with the new GL-based logic — should be the first thing checked next session.
+
 ---
 
 ## Intuit Developer Portal
