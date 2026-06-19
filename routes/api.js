@@ -33,27 +33,36 @@ router.get('/api/debug-undeposited-funds', requireAuth, async (req, res) => {
     const account = accountData.QueryResponse?.Account?.[0];
     if (!account) return res.status(404).json({ error: 'Undeposited Funds account not found' });
 
-    // DepositToAccountRef isn't queryable in QBO's query language, so fetch the
-    // most recent payments and filter client-side.
-    const paymentQuery = encodeURIComponent(
-      'SELECT * FROM Payment ORDERBY TxnDate DESC MAXRESULTS 1000'
-    );
-    const paymentData = await qboGet(
-      `/v3/company/${req.session.realmId}/query?query=${paymentQuery}&minorversion=65`,
-      token
-    );
-    const allPayments = paymentData.QueryResponse?.Payment || [];
+    // DepositToAccountRef isn't queryable in QBO's query language, so fetch
+    // payments page by page (sequentially, to avoid QBO throttling) and filter
+    // client-side. `pages` query param controls how far back to look (1000/page).
+    const maxPages = Math.min(parseInt(req.query.pages, 10) || 1, 20);
+    const allPayments = [];
+    for (let page = 0; page < maxPages; page++) {
+      const startPosition = page * 1000 + 1;
+      const paymentQuery = encodeURIComponent(
+        `SELECT * FROM Payment ORDERBY TxnDate DESC STARTPOSITION ${startPosition} MAXRESULTS 1000`
+      );
+      const paymentData = await qboGet(
+        `/v3/company/${req.session.realmId}/query?query=${paymentQuery}&minorversion=65`,
+        token
+      );
+      const batch = paymentData.QueryResponse?.Payment || [];
+      allPayments.push(...batch);
+      if (batch.length < 1000) break;
+    }
     const payments = allPayments.filter(p => p.DepositToAccountRef?.value === account.Id);
 
     const unswept = payments.filter(p => !(p.LinkedTxn || []).some(lt => lt.TxnType === 'Deposit'));
 
     res.json({
       account,
+      pagesFetched: Math.ceil(allPayments.length / 1000) || 0,
       totalPaymentsFetched: allPayments.length,
       undepositedFundsPayments: payments.length,
       unsweptCount: unswept.length,
       unsweptSum: unswept.reduce((sum, p) => sum + (p.TotalAmt || 0), 0),
-      unswept: unswept.map(p => ({
+      unswept: unswept.slice(0, 50).map(p => ({
         id: p.Id,
         date: p.TxnDate,
         amount: p.TotalAmt,
