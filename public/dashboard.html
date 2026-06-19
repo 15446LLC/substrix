@@ -161,6 +161,28 @@
     previously-reconciled transaction, which leaves no trace in QBO's reports.
   </p>
 
+  <h2 style="font-size:1.05rem;margin:32px 0 12px;">Undeposited Funds Hygiene</h2>
+  <div class="card">
+    <div class="loading" id="uf-loading">Loading…</div>
+    <table id="uf-table" style="display:none">
+      <thead>
+        <tr>
+          <th>Balance</th>
+          <th>Unswept &lt; 30 Days</th>
+          <th>Unswept 30 Days–12 Months</th>
+          <th>Unswept &gt; 12 Months</th>
+        </tr>
+      </thead>
+      <tbody id="uf-tbody"></tbody>
+    </table>
+  </div>
+  <p class="dim" style="font-size:0.8rem;margin-top:8px;">
+    Payments routed to Undeposited Funds that haven't yet been matched to a bank deposit misstate cash on the
+    balance sheet until they're swept in. A balance under 30 days old is normal processing lag; anything over
+    12 months is a real hygiene problem. Only checks Payment entities — Sales Receipts routed through
+    Undeposited Funds aren't covered yet.
+  </p>
+
   <script>
     function fmt(dateStr) {
       if (!dateStr) return '<span class="dim">—</span>';
@@ -223,7 +245,39 @@
       }
     }
 
+    function bucketBadge(bucket, color) {
+      return bucket.count === 0
+        ? '<span class="dim">—</span>'
+        : badge(color, `${fmtCurrency(bucket.sum)} (${bucket.count})`);
+    }
+
+    async function loadUndepositedFunds() {
+      try {
+        const res = await fetch('/api/undeposited-funds');
+        if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+        const data = await res.json();
+
+        const { balance, buckets } = data;
+        const balanceColor = balance === 0 ? 'green' : (buckets.over12Months.sum > 0 ? 'red' : 'yellow');
+
+        document.getElementById('uf-tbody').innerHTML = `
+          <tr>
+            <td>${badge(balanceColor, fmtCurrency(balance))}</td>
+            <td>${bucketBadge(buckets.last30Days, 'yellow')}</td>
+            <td>${bucketBadge(buckets.last30DaysTo12Months, 'red')}</td>
+            <td>${bucketBadge(buckets.over12Months, 'red')}</td>
+          </tr>
+        `;
+
+        document.getElementById('uf-loading').style.display = 'none';
+        document.getElementById('uf-table').style.display = 'table';
+      } catch (err) {
+        document.getElementById('uf-loading').textContent = 'Error loading data: ' + err.message;
+      }
+    }
+
     load();
+    loadUndepositedFunds();
   </script>
 </body>
 </html>
