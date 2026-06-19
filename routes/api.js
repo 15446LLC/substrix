@@ -1,7 +1,7 @@
 const express = require('express');
 const { buildReconciliationHealth } = require('../lib/reconciliation');
 const { buildUndepositedFundsHealth } = require('../lib/undepositedFunds');
-const { getValidToken, qboGet } = require('../lib/qbo');
+const { buildUnappliedTransactionsHealth } = require('../lib/unappliedTransactions');
 const router = express.Router();
 
 function requireAuth(req, res, next) {
@@ -29,35 +29,12 @@ router.get('/api/undeposited-funds', requireAuth, async (req, res) => {
   }
 });
 
-// Temporary debug endpoint: inspect real Payment/VendorCredit/BillPayment
-// shapes, and test whether UnappliedAmt/Balance are queryable server-side.
-router.get('/api/debug-unapplied', requireAuth, async (req, res) => {
+router.get('/api/unapplied-transactions', requireAuth, async (req, res) => {
   try {
-    const token = await getValidToken(req.session);
-    const tryQuery = async (label, queryStr) => {
-      try {
-        const query = encodeURIComponent(queryStr);
-        const data = await qboGet(
-          `/v3/company/${req.session.realmId}/query?query=${query}&minorversion=65`,
-          token
-        );
-        return { label, ok: true, count: Object.values(data.QueryResponse || {}).flat().length, sample: data.QueryResponse };
-      } catch (err) {
-        return { label, ok: false, error: err.message };
-      }
-    };
-
-    const results = await Promise.all([
-      tryQuery('Payment WHERE UnappliedAmt > 0', "SELECT * FROM Payment WHERE UnappliedAmt > '0' MAXRESULTS 10"),
-      tryQuery('VendorCredit WHERE Balance > 0', "SELECT * FROM VendorCredit WHERE Balance > '0' MAXRESULTS 10"),
-      tryQuery('BillPayment sample', 'SELECT * FROM BillPayment ORDERBY TxnDate DESC MAXRESULTS 5'),
-      tryQuery('CreditMemo sample', 'SELECT * FROM CreditMemo ORDERBY TxnDate DESC MAXRESULTS 5'),
-      tryQuery('CreditMemo WHERE Balance > 0', "SELECT * FROM CreditMemo WHERE Balance > '0' MAXRESULTS 10"),
-    ]);
-
-    res.json({ results });
+    const data = await buildUnappliedTransactionsHealth(req.session);
+    res.json({ ...data, fetchedAt: new Date().toISOString() });
   } catch (err) {
-    console.error('Debug unapplied error:', err);
+    console.error('Unapplied transactions fetch error:', err);
     res.status(500).json({ error: err.message });
   }
 });
