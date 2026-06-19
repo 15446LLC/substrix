@@ -98,7 +98,13 @@ A structured validation layer that every module feeds into, designed so a user c
 - [x] Capture `intuit_tid` from QBO response headers for support/troubleshooting — logged on every failed
   QBO request.
 - [x] Add in-app support/contact link — mailto link in the dashboard header.
-- [ ] Move sessions out of in-memory store (restarts currently log everyone out)
+- [x] Move sessions out of in-memory store — **decided against, for now** (2026-06-19). Render's free tier
+  already spins the app down after inactivity, so a persistent session store wouldn't actually deliver
+  "stay logged in" on this tier without also paying for an always-on instance. Adding a DB-backed store
+  now would reintroduce the same infra complexity (migrations, connection handling, another failure mode)
+  already avoided for the integrity check and Undeposited Funds work, to fix what's really a free-tier
+  hosting characteristic, not a code defect. **Revisit once on a paid/always-on tier with real users** —
+  a paying user getting logged out unpredictably becomes a real complaint at that point.
 - Point `sentri.15446.com` DNS to Render (currently using onrender.com URL)
 - Reassess SENTRI trademark situation with an attorney (PYXUS Holdings has a live registration)
 
