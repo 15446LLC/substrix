@@ -51,6 +51,8 @@ router.get('/api/debug-unapplied', requireAuth, async (req, res) => {
       tryQuery('Payment WHERE UnappliedAmt > 0', "SELECT * FROM Payment WHERE UnappliedAmt > '0' MAXRESULTS 10"),
       tryQuery('VendorCredit WHERE Balance > 0', "SELECT * FROM VendorCredit WHERE Balance > '0' MAXRESULTS 10"),
       tryQuery('BillPayment sample', 'SELECT * FROM BillPayment ORDERBY TxnDate DESC MAXRESULTS 5'),
+      tryQuery('CreditMemo sample', 'SELECT * FROM CreditMemo ORDERBY TxnDate DESC MAXRESULTS 5'),
+      tryQuery('CreditMemo WHERE Balance > 0', "SELECT * FROM CreditMemo WHERE Balance > '0' MAXRESULTS 10"),
     ]);
 
     res.json({ results });
