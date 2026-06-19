@@ -155,6 +155,11 @@
     <div class="legend-item"><div class="legend-dot" style="background:#ffc107"></div> Last rec 31–90 days / gap within 30 days</div>
     <div class="legend-item"><div class="legend-dot" style="background:#dc3545"></div> Last rec over 90 days or never / gap over 30 days</div>
   </div>
+  <p class="dim" style="font-size:0.8rem;margin-top:8px;">
+    "Unreconciled Before Last Rec" also serves as the reconciliation integrity check: if a previously-reconciled
+    transaction is later edited or un-reconciled, it will show up here. It cannot catch outright deletion of a
+    previously-reconciled transaction, which leaves no trace in QBO's reports.
+  </p>
 
   <script>
     function fmt(dateStr) {
