@@ -44,6 +44,26 @@ than Module 1.
 - [ ] Not yet validated against a company with an actual nonzero balance / real unswept payments — only
   tested against a clean ($0) account so far. The bucket-scanning path is unverified on real data.
 
+## Module 3 — Unapplied Payments & Credits
+Status: built and live on the dashboard, validated against a real company (found a real backlog on both sides).
+
+Customer-side payments/credits not applied to an invoice overstate open AR; vendor-side credits not applied
+to a bill, or vendor payments with no linked bill, misstate AP. Originally scoped from the future-modules
+AR/AP Health items.
+
+- [x] Customer side: `Payment.UnappliedAmt > 0` plus `CreditMemo.Balance > 0`, combined into one bucketed check.
+- [x] Vendor side: `VendorCredit.Balance > 0` plus `BillPayment` with no `LinkedTxn` of `TxnType: Bill`, combined
+  into one bucketed check.
+- [x] Confirmed via debug endpoint that `UnappliedAmt` and `Balance` exist as return fields but are **not
+  queryable** server-side (same QBO quirk as `DepositToAccountRef` in Module 2) — fetch by `TxnDate` window,
+  filter client-side.
+- [x] Same no-DB pattern as Module 2: bounded window, bucketed by age (30 days / 30 days–12 months / over 12
+  months), recomputed from scratch every refresh.
+- [x] `/api/unapplied-transactions` endpoint + dashboard card (one merged row for customer, one for vendor).
+- [x] Validated against the real company: found $5,473.75 across 3 unapplied customer transactions (30
+  days–12 months old) and $6,400.00 across 5 unapplied vendor transactions (over 12 months old) — not yet
+  independently confirmed against QBO's own UI, but the result is plausible and non-trivial.
+
 ## Validation Report / Score (new, cross-cutting)
 A structured validation layer that every module feeds into, designed so a user can glance at the output and quickly assess whether the financial reporting is trustworthy — not just a single vague health score, but not a wall of detail either:
 - **Top-level glance state**: an overall status (e.g. Trustworthy / Caution / Do Not Rely On) that a user sees first. This is a deterministic roll-up of the underlying checks, not a separate judgment call — same severity data, different altitude.
@@ -53,29 +73,32 @@ A structured validation layer that every module feeds into, designed so a user c
 - Expose machine-readable output (API) in addition to the dashboard, so the validation state could eventually gate or annotate downstream reports/analytics — this is what makes Sentri a trust layer rather than a checklist.
 
 ## Future Modules — ranked by how directly and how often they'd corrupt a financial report
-(Undeposited Funds Hygiene moved to Module 2, above.)
+(Undeposited Funds Hygiene moved to Module 2; AR/AP unapplied payments/credits moved to Module 3, above.)
 1. **Voided / Deleted Transaction Monitoring** — QBO allows voiding or deleting a transaction in an already-reported prior period with no obvious trace, silently changing historical reports after the fact. Same risk class as reconciliation integrity (Module 1), but applies to any transaction, not just reconciled ones.
 2. **Cross-Report Consistency Checks** — sanity checks like "does the balance sheet balance," "does P&L net income tie to retained earnings movement," "does AR aging total match the AR balance sheet figure." Unlike per-account checks, this catches systemic data corruption that no single check would surface.
 3. **Uncategorized / Suspense Transactions** — directly misstates P&L line items; common, often large $ amounts sitting unclassified.
 4. **Chart of Accounts Quality** — mis-mapped accounts corrupt every report built on top of them; root-cause level.
 5. **Duplicate Transactions** — duplicate vendor bills/expenses or duplicate bank-feed entries directly overstate expenses/liabilities; common and easy to detect.
 6. **Journal Entry Quality** — manual JEs bypass normal transaction controls, can introduce unbalanced or erroneous entries straight into reports.
-7. **AP Health** (aging, bills paid without a bill) — payments without a bill mean liabilities/cash are understated or mismatched.
-8. **AR Health** (aging, unapplied payments, open credits) — unapplied payments/credits overstate AR and can mask actual revenue.
-9. **Bank Feed Health** — unmatched/duplicate feed transactions cause missing or double-counted entries.
-10. **Closing & Period Discipline** — backdated entries after a period closes silently change reports already issued.
-11. **Negative Balance / Sign Anomaly Detection** — a bank or AR balance going negative when it structurally shouldn't is often a symptom of misclassified transactions.
-12. **Payroll Liability Health** — real but narrower scope (one account family).
-13. **Tax Line Mapping** — affects tax-specific reports, not general financial statements.
-14. **Fixed Assets & Depreciation** — slower-moving, less frequent source of error, narrower balance-sheet impact.
-15. **Inventory Health** (if applicable) — only relevant to users carrying inventory; scoped to COGS/balance sheet.
+7. **AP/AR Aging** — separate from the unapplied-payments check in Module 3; this would be open-balance aging on invoices/bills themselves, not unapplied credits.
+8. **Bank Feed Health** — unmatched/duplicate feed transactions cause missing or double-counted entries.
+9. **Closing & Period Discipline** — backdated entries after a period closes silently change reports already issued.
+10. **Negative Balance / Sign Anomaly Detection** — a bank or AR balance going negative when it structurally shouldn't is often a symptom of misclassified transactions.
+11. **Payroll Liability Health** — real but narrower scope (one account family).
+12. **Tax Line Mapping** — affects tax-specific reports, not general financial statements.
+13. **Fixed Assets & Depreciation** — slower-moving, less frequent source of error, narrower balance-sheet impact.
+14. **Inventory Health** (if applicable) — only relevant to users carrying inventory; scoped to COGS/balance sheet.
 
 ## Pre-launch hardening (before real users)
-- Handle expired refresh tokens / invalid grant errors (currently generic 500)
-- Add CSRF state validation on OAuth callback
-- Capture `intuit_tid` from QBO response headers for support/troubleshooting
-- Add in-app support/contact link
-- Move sessions out of in-memory store (restarts currently log everyone out)
+- [x] Handle expired refresh tokens / invalid grant errors — `QboAuthExpiredError` now thrown when the refresh
+  token is dead or QBO returns 401; API routes clear the session and tell the frontend to redirect to
+  `/connect` instead of surfacing a raw 500.
+- [x] Add CSRF state validation on OAuth callback — `/connect` now generates a random state stored in session,
+  validated on `/callback`, replacing the hardcoded `state=sentri`.
+- [x] Capture `intuit_tid` from QBO response headers for support/troubleshooting — logged on every failed
+  QBO request.
+- [x] Add in-app support/contact link — mailto link in the dashboard header.
+- [ ] Move sessions out of in-memory store (restarts currently log everyone out)
 - Point `sentri.15446.com` DNS to Render (currently using onrender.com URL)
 - Reassess SENTRI trademark situation with an attorney (PYXUS Holdings has a live registration)
 
