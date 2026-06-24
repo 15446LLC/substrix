@@ -1,10 +1,10 @@
-# Sentri — Project Summary
+# Substrix — Project Summary
 
-## What Is Sentri?
+## What Is Substrix?
 
-Sentri is a web application that connects to QuickBooks Online (QBO) via the Intuit API and provides a **books health dashboard** — starting with reconciliation health as Module 1, with additional inspection modules to follow.
+Substrix is a web application that connects to QuickBooks Online (QBO) via the Intuit API and provides a **books health dashboard** — starting with reconciliation health as Module 1, with additional inspection modules to follow.
 
-The name is a deliberate misspelling of "Sentry" — something standing watch over your books, catching problems before they become serious. It is short, ownable, and feels like infrastructure software.
+Originally named "Sentri" (a deliberate misspelling of "Sentry" — something standing watch over your books). Renamed to Substrix on 2026-06-19 after finding a live, conflicting USPTO trademark registration for "SENTRI" in overlapping classes (see Naming Update below). "Substrix" is an invented word with no dictionary meaning, chosen to avoid the same real-word-collision problem.
 
 ---
 
@@ -59,7 +59,7 @@ Displays a list of all accounts that require reconciliation (bank accounts, cred
 ## Build Sequence
 
 1. ✅ Register on Intuit Developer Portal
-2. ✅ Create Sentri app in developer dashboard
+2. ✅ Create Substrix app in developer dashboard
 3. ✅ Retrieve development OAuth credentials (Client ID + Client Secret)
 4. ✅ Configure Redirect URI: `http://localhost:3000/callback`
 5. ✅ Set up Node.js project locally
@@ -76,7 +76,7 @@ Displays a list of all accounts that require reconciliation (bank accounts, cred
 
 ## Status as of June 12, 2026
 
-- **Deployed**: Sentri runs live at https://sentri-hefh.onrender.com (Render, free tier — spins down after inactivity, ~50s cold start).
+- **Deployed**: Substrix runs live at https://sentri-hefh.onrender.com (Render, free tier — spins down after inactivity, ~50s cold start).
 - **GitHub**: source at github.com/15446LLC/sentri, `main` branch auto-deploys to Render.
 - **Sandbox**: OAuth + dashboard verified end-to-end against Intuit sandbox company (4 accounts: Checking, Savings, Mastercard, Visa — all show "Never reconciled" since sandbox has no rec history).
 - **Production credentials**: Unlocked via Intuit's App Details + Compliance questionnaire. Production Client ID/Secret added to Render env vars (`ENVIRONMENT=production`). Production redirect URI `https://sentri-hefh.onrender.com/callback` registered in Intuit.
@@ -145,7 +145,7 @@ Added `/api/debug-sales-tax` to probe what's available. Findings:
 
 - **Portal:** developer.intuit.com
 - **Workspace:** 15446
-- **App Name:** Sentri
+- **App Name:** Sentri (not yet renamed in the Intuit Developer Portal — see Naming Update below)
 - **App ID:** 0c2db838-0028-49e3-b48e-45a3af7e0004
 - **Status:** In Development
 - **Redirect URI (Development):** `http://localhost:3000/callback`
@@ -153,7 +153,7 @@ Added `/api/debug-sales-tax` to probe what's available. Findings:
 
 ---
 
-## Name Research (May 12, 2026)
+## Name Research (May 12, 2026) — for "Sentri"
 
 | Check | Result |
 |---|---|
@@ -166,7 +166,23 @@ Added `/api/debug-sales-tax` to probe what's available. Findings:
 | USPTO — SENTRI FIRE (Sentrinox AI) | Live / Pending — cybersecurity |
 | Intuit App Store | No existing app named Sentri |
 
-**Decision:** Proceed under the Sentri name through development. Reassess trademark situation with a trademark attorney before launch. PYXUS Holdings registration is the key item to review.
+**Decision (superseded — see Naming Update below):** Proceed under the Sentri name through development.
+Reassess trademark situation with a trademark attorney before launch. PYXUS Holdings registration is the
+key item to review.
+
+### Naming Update — 2026-06-19: Renamed from Sentri to Substrix
+
+The live PYXUS Holdings registration above sits in classes 009/035/042/044 — directly overlapping this
+app's SaaS/business-services category, and a real risk to a future Marketplace submission. Decided against
+paying for formal attorney clearance at this pre-revenue stage; instead searched for and switched to a name
+with no apparent conflicts. Checked informally via web search (not a substitute for legal clearance):
+**Substrix** returned no fintech/SaaS/business hits — only an unrelated music producer's SoundCloud/YouTube
+handle and an unrelated GitHub project (`kirisaki/substrix`, a Rust unikernel).
+
+**Not yet done** (external accounts, outside code-level changes): GitHub repo rename, Render service
+name/URL, Intuit Developer Portal app name and redirect URIs above. Code, docs, and the 15446.com landing
+page were renamed to Substrix in this same session; the live app/repo/portal still say "Sentri" until those
+external steps happen.
 
 ---
 

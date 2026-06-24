@@ -1,7 +1,7 @@
-# Sentri — Product Roadmap
+# Substrix — Product Roadmap
 
 ## Mission
-Sentri validates that the underlying QBO data is sound *before* anyone — a bookkeeper, an owner, or a higher-level analytics tool — trusts a report built on it. Reconciled books are not the same as correct books: a register can pass reconciliation and still produce a wrong reported balance if unreconciled transactions exist dated before the last reconciliation (especially far in the past) — the rec only proves the balance was right as of that date, not that nothing was altered before it. Every module should be judged by how directly it catches data that would silently corrupt a financial report.
+Substrix validates that the underlying QBO data is sound *before* anyone — a bookkeeper, an owner, or a higher-level analytics tool — trusts a report built on it. Reconciled books are not the same as correct books: a register can pass reconciliation and still produce a wrong reported balance if unreconciled transactions exist dated before the last reconciliation (especially far in the past) — the rec only proves the balance was right as of that date, not that nothing was altered before it. Every module should be judged by how directly it catches data that would silently corrupt a financial report.
 
 ## Module 1 — Reconciliation Health Dashboard (current)
 Status: built and verified end-to-end against a real company with the GeneralLedger-based logic. Next: pre-reconciliation unreconciled transactions check.
@@ -70,7 +70,7 @@ A structured validation layer that every module feeds into, designed so a user c
 - **Severity hierarchy, not a flat list**: the worst issue surfaces first; lower-severity checks collapse/secondary, so "quickly assess" doesn't break down as more modules (and their checks) get added.
 - Each check (per module) emits pass/fail/warning + severity + a plain-language statement framed in terms of the actual report line item at risk (e.g. "Cash balance on your Balance Sheet as of [date] may be misstated" rather than "3 unreconciled transactions in Checking before last rec") — speaking the language of the report the user is about to read, not the language of the underlying QBO data.
 - Aggregate into a per-company validation report a bookkeeper/accountant can act on — pointing at specific accounts/transactions, not just a rating.
-- Expose machine-readable output (API) in addition to the dashboard, so the validation state could eventually gate or annotate downstream reports/analytics — this is what makes Sentri a trust layer rather than a checklist.
+- Expose machine-readable output (API) in addition to the dashboard, so the validation state could eventually gate or annotate downstream reports/analytics — this is what makes Substrix a trust layer rather than a checklist.
 
 ## Future Modules — ranked by how directly and how often they'd corrupt a financial report
 (Undeposited Funds Hygiene moved to Module 2; AR/AP unapplied payments/credits moved to Module 3, above.)
@@ -86,14 +86,14 @@ A structured validation layer that every module feeds into, designed so a user c
 10. **Negative Balance / Sign Anomaly Detection** — a bank or AR balance going negative when it structurally shouldn't is often a symptom of misclassified transactions.
 11. **Payroll Liability Health** — real but narrower scope (one account family).
 12. **Tax Line Mapping** — affects tax-specific reports, not general financial statements.
-13. **Sales Tax Health** — explored 2026-06-19 (see [SENTRI_PROJECT_SUMMARY_1.md](SENTRI_PROJECT_SUMMARY_1.md)).
+13. **Sales Tax Health** — explored 2026-06-19 (see [SUBSTRIX_PROJECT_SUMMARY_1.md](SUBSTRIX_PROJECT_SUMMARY_1.md)).
     Wanted to cross-check Sales Tax Payable account balances against QBO's own computed liability, but
     `TaxSummary`/`TaxLiabilityReport` both hit the same `Permission Denied 5020` wall as Module 1's
     `ReconciliationDetail`/`Summary` reports — not buildable as originally scoped. `Account`, `TaxAgency`,
     `TaxCode`, `TaxRate` entity queries all work fine, so a scoped-down version (flag negative or stale
     Sales Tax Payable balances, without confirming the dollar amount itself) is still possible.
-13. **Fixed Assets & Depreciation** — slower-moving, less frequent source of error, narrower balance-sheet impact.
-14. **Inventory Health** (if applicable) — only relevant to users carrying inventory; scoped to COGS/balance sheet.
+14. **Fixed Assets & Depreciation** — slower-moving, less frequent source of error, narrower balance-sheet impact.
+15. **Inventory Health** (if applicable) — only relevant to users carrying inventory; scoped to COGS/balance sheet.
 
 ## Pre-launch hardening (before real users)
 - [x] Handle expired refresh tokens / invalid grant errors — `QboAuthExpiredError` now thrown when the refresh
@@ -111,7 +111,12 @@ A structured validation layer that every module feeds into, designed so a user c
   already avoided for the integrity check and Undeposited Funds work, to fix what's really a free-tier
   hosting characteristic, not a code defect. **Revisit once on a paid/always-on tier with real users** —
   a paying user getting logged out unpredictably becomes a real complaint at that point.
-- Point `sentri.15446.com` DNS to Render (currently using onrender.com URL)
-- Reassess SENTRI trademark situation with an attorney (PYXUS Holdings has a live registration)
+- Point `substrix.15446.com` DNS to Render (currently using onrender.com URL)
+- [x] Renamed from "Sentri" to "Substrix" (2026-06-19) — PYXUS Holdings holds a live USPTO registration for
+  "SENTRI" in classes 009/035/042/044, which overlaps directly with this app's SaaS/business-services
+  category. Decided against paying for attorney clearance at this pre-revenue stage; instead switched to a
+  name with no apparent conflicts (informally checked via web search — no fintech/SaaS/business usage found,
+  just an unrelated DJ handle and an unrelated GitHub project). **Not a substitute for formal trademark
+  clearance** — revisit with an attorney before Marketplace submission or any heavier investment in the name.
 
-See [SENTRI_PROJECT_SUMMARY_1.md](SENTRI_PROJECT_SUMMARY_1.md) for full project history and detailed session notes.
+See [SUBSTRIX_PROJECT_SUMMARY_1.md](SUBSTRIX_PROJECT_SUMMARY_1.md) for full project history and detailed session notes.

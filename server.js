@@ -20,5 +20,5 @@ app.use('/', authRoutes);
 app.use('/', apiRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Sentri running at http://localhost:${PORT}`);
+  console.log(`Substrix running at http://localhost:${PORT}`);
 });
