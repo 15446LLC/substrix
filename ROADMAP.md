@@ -111,7 +111,9 @@ A structured validation layer that every module feeds into, designed so a user c
   already avoided for the integrity check and Undeposited Funds work, to fix what's really a free-tier
   hosting characteristic, not a code defect. **Revisit once on a paid/always-on tier with real users** —
   a paying user getting logged out unpredictably becomes a real complaint at that point.
-- Point `substrix.15446.com` DNS to Render (currently using onrender.com URL)
+- [x] Point `substrix.15446.com` DNS to Render — CNAME added at GoDaddy, custom domain verified in Render
+  (2026-06-23). SSL cert was still issuing at end of session; `REDIRECT_URI` and the Intuit Developer
+  Portal still need updating to actually use this domain (see SUBSTRIX_PROJECT_SUMMARY_1.md).
 - [x] Renamed from "Sentri" to "Substrix" (2026-06-19) — PYXUS Holdings holds a live USPTO registration for
   "SENTRI" in classes 009/035/042/044, which overlaps directly with this app's SaaS/business-services
   category. Decided against paying for attorney clearance at this pre-revenue stage; instead switched to a

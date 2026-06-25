@@ -184,6 +184,28 @@ name/URL, Intuit Developer Portal app name and redirect URIs above. Code, docs, 
 page were renamed to Substrix in this same session; the live app/repo/portal still say "Sentri" until those
 external steps happen.
 
+### Naming Update — 2026-06-23: External rename in progress
+
+- [x] **GitHub repo renamed**: `15446LLC/sentri` → `15446LLC/substrix`. Local remote updated
+  (`git remote set-url origin https://github.com/15446LLC/substrix.git`), confirmed working via `git fetch`.
+- [x] **Render custom domain added**: `substrix.15446.com` added as a Custom Domain on the existing
+  `sentri-hefh` Render service (chose custom domain over renaming the service itself — renaming the
+  service would change its `.onrender.com` hostname, which is also exactly what the new domain's CNAME
+  target points at, so renaming now would break the domain). DNS CNAME added at GoDaddy
+  (`substrix` → `sentri-hefh.onrender.com`), verified in Render. SSL certificate was still issuing as of
+  end of session — should be done by next session (Render/Let's Encrypt typically takes a few minutes,
+  occasionally longer).
+- **Deliberately left alone**: the Render service's "Name" field (still `sentri`) and the dashboard's
+  cached "15446LLC / sentri" repo display — both cosmetic only, not visible to end users, and changing
+  the service Name specifically risks breaking the new custom domain (see above).
+- **Next session should start by**: confirming `https://substrix.15446.com` loads the app (cert should be
+  ready by now), then:
+  1. Update `REDIRECT_URI` env var on Render to `https://substrix.15446.com/callback`
+  2. Update the Intuit Developer Portal: rename the app from "Sentri" to "Substrix", update redirect URI(s)
+     for both Development and Production keys to match
+  3. Update the landing page's "Connect to QuickBooks" link (`15446-website/substrix/index.html`) from
+     `sentri-hefh.onrender.com/connect` to `substrix.15446.com/connect`
+
 ---
 
 ## Notes
