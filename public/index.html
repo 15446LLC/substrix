@@ -3,56 +3,205 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Substrix — Books Health</title>
+  <title>Substrix — Books Health Monitoring for QuickBooks Online</title>
+  <meta name="description" content="Substrix connects to QuickBooks Online and surfaces reconciliation problems, undeposited funds, and unapplied payments before they become cleanup projects. Free and read-only." />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
       background: #f5f7fa;
       color: #1a1a1a;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      line-height: 1.5;
     }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 48px 56px;
-      max-width: 440px;
-      width: 100%;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-    .logo {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      margin-bottom: 8px;
-    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+    .hero { text-align: center; padding: 64px 0 40px; }
+    .logo { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px; }
     .tagline {
+      font-size: 1.25rem;
+      color: #333;
+      margin: 14px auto 6px;
+      max-width: 560px;
+      font-weight: 600;
+    }
+    .subtagline {
       font-size: 0.95rem;
-      color: #555;
-      margin-bottom: 36px;
+      color: #666;
+      max-width: 540px;
+      margin: 0 auto 28px;
     }
     .connect-btn { display: inline-block; transition: opacity 0.15s; }
     .connect-btn:hover { opacity: 0.9; }
-    .connect-btn img { display: block; width: 240px; max-width: 100%; height: auto; }
-    .footnote {
-      margin-top: 28px;
+    .connect-btn img { display: block; width: 260px; max-width: 100%; height: auto; }
+    .trust-line {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #555;
+      font-weight: 500;
+    }
+    .trust-line span { margin: 0 8px; }
+
+    /* Dashboard preview (illustrative mockup, not real data) */
+    .preview {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 20px;
+      margin: 24px auto 8px;
+      text-align: left;
+      font-size: 0.72rem;
+    }
+    .preview-title {
+      font-weight: 700;
       font-size: 0.78rem;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .preview table { width: 100%; border-collapse: collapse; }
+    .preview th {
+      text-align: left; font-size: 0.6rem; text-transform: uppercase;
+      letter-spacing: 0.04em; color: #888; padding: 6px 8px;
+      border-bottom: 1px solid #eee; font-weight: 600;
+    }
+    .preview td { padding: 8px; border-bottom: 1px solid #f4f4f4; }
+    .preview tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 7px; border-radius: 4px; font-weight: 600; font-size: 0.68rem;
+    }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .b-green  { background: #d4edda; color: #155724; } .b-green .dot { background: #28a745; }
+    .b-yellow { background: #fff3cd; color: #856404; } .b-yellow .dot { background: #ffc107; }
+    .b-red    { background: #f8d7da; color: #721c24; } .b-red .dot { background: #dc3545; }
+    .preview-note { text-align: center; font-size: 0.72rem; color: #aaa; margin-bottom: 40px; font-style: italic; }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding-bottom: 48px;
+    }
+    @media (max-width: 700px) { .features { grid-template-columns: 1fr; } }
+    .feature {
+      background: #fff;
+      border-radius: 10px;
+      padding: 24px 22px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
+    .feature h3 { font-size: 0.95rem; margin-bottom: 8px; }
+    .feature p { font-size: 0.85rem; color: #555; }
+
+    .how {
+      background: #fff;
+      border-radius: 10px;
+      padding: 28px 32px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+      margin-bottom: 48px;
+    }
+    .how h2 { font-size: 1.05rem; margin-bottom: 14px; }
+    .how ol { padding-left: 22px; font-size: 0.9rem; color: #444; }
+    .how li { margin-bottom: 8px; }
+    .how li:last-child { margin-bottom: 0; }
+
+    .bottom-cta { text-align: center; padding-bottom: 56px; }
+
+    footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 24px 0 40px;
+      text-align: center;
+      font-size: 0.8rem;
       color: #888;
     }
+    footer a { color: #666; text-decoration: none; margin: 0 10px; }
+    footer a:hover { color: #333; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">Substrix</div>
-    <p class="tagline">Books health monitoring for QuickBooks Online</p>
-    <a class="connect-btn" href="/connect" aria-label="Connect to QuickBooks">
-      <img src="/assets/C2QB_green_btn_lg_default.png" alt="Connect to QuickBooks" />
-    </a>
-    <p class="footnote">You'll be redirected to Intuit to authorize access.</p>
+
+  <div class="wrap">
+    <section class="hero">
+      <div class="logo">Substrix</div>
+      <p class="tagline">Catch bookkeeping problems before they become cleanup projects.</p>
+      <p class="subtagline">
+        Substrix connects to your QuickBooks Online company and gives you a live books-health
+        dashboard: stale and broken reconciliations, money stuck in Undeposited Funds, and
+        payments that were never applied.
+      </p>
+      <a class="connect-btn" href="/connect" aria-label="Connect to QuickBooks">
+        <img src="/assets/C2QB_green_btn_lg_default.png" alt="Connect to QuickBooks" />
+      </a>
+      <p class="trust-line">Free<span>·</span>Read-only<span>·</span>Nothing is ever written to your books</p>
+
+      <div class="preview" aria-hidden="true">
+        <div class="preview-title">Reconciliation Health</div>
+        <table>
+          <tr><th>Account</th><th>Last Reconciled</th><th>Unreconciled Before Last Rec</th><th>Sum</th></tr>
+          <tr>
+            <td><strong>Checking — Operating</strong></td>
+            <td><span class="badge b-green"><span class="dot"></span>Jun 30, 2026</span></td>
+            <td><span class="badge b-green"><span class="dot"></span>0 transactions</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Credit Card — 4412</strong></td>
+            <td><span class="badge b-yellow"><span class="dot"></span>May 12, 2026</span></td>
+            <td><span class="badge b-red"><span class="dot"></span>7 transactions</span></td>
+            <td>$4,806.22</td>
+          </tr>
+          <tr>
+            <td><strong>Savings — Reserve</strong></td>
+            <td><span class="badge b-red"><span class="dot"></span>Never</span></td>
+            <td><span class="badge b-green"><span class="dot"></span>0 transactions</span></td>
+            <td>—</td>
+          </tr>
+        </table>
+      </div>
+      <p class="preview-note">Illustrative preview with sample data</p>
+    </section>
+
+    <section class="features">
+      <div class="feature">
+        <h3>Reconciliation health</h3>
+        <p>Every bank and credit card account with its last-reconciled date, color-coded — and
+        transactions that were edited or un-reconciled after the fact, flagged with a drill-down
+        to the exact entries.</p>
+      </div>
+      <div class="feature">
+        <h3>Undeposited Funds hygiene</h3>
+        <p>Payments sitting in Undeposited Funds that were never swept into a bank deposit,
+        aged into buckets so you can tell processing lag from a months-old problem.</p>
+      </div>
+      <div class="feature">
+        <h3>Unapplied payments &amp; credits</h3>
+        <p>Customer payments, deposits, and credit memos never applied to an invoice — and vendor
+        credits and overpayments on the other side — so open AR and AP reflect reality.</p>
+      </div>
+    </section>
+
+    <section class="how">
+      <h2>How it works</h2>
+      <ol>
+        <li>Click <strong>Connect to QuickBooks</strong> and authorize Substrix through Intuit's secure sign-in. No account creation, no setup.</li>
+        <li>Substrix reads your accounts and transactions through the official QuickBooks Online API — it never creates, edits, or deletes anything.</li>
+        <li>Your books-health dashboard loads in seconds. Reports are generated live on each visit; your accounting data isn't stored.</li>
+        <li>Disconnect any time — from the dashboard or from QuickBooks — and Substrix's access is revoked immediately.</li>
+      </ol>
+    </section>
+
+    <div class="bottom-cta">
+      <a class="connect-btn" href="/connect" aria-label="Connect to QuickBooks">
+        <img src="/assets/C2QB_green_btn_lg_default.png" alt="Connect to QuickBooks" />
+      </a>
+      <p class="trust-line">Takes about 30 seconds</p>
+    </div>
   </div>
+
+  <footer>
+    <a href="https://15446.com/substrix/privacy-policy">Privacy Policy</a>
+    <a href="https://15446.com/substrix/terms">Terms of Service</a>
+    <a href="mailto:i@15446.com?subject=Substrix%20Support">Support</a>
+    <div style="margin-top:12px;">© 2026 15446 LLC</div>
+  </footer>
+
 </body>
 </html>
