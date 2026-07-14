@@ -198,13 +198,14 @@ external steps happen.
 - **Deliberately left alone**: the Render service's "Name" field (still `sentri`) and the dashboard's
   cached "15446LLC / sentri" repo display — both cosmetic only, not visible to end users, and changing
   the service Name specifically risks breaking the new custom domain (see above).
-- **Next session should start by**: confirming `https://substrix.15446.com` loads the app (cert should be
-  ready by now), then:
-  1. Update `REDIRECT_URI` env var on Render to `https://substrix.15446.com/callback`
-  2. Update the Intuit Developer Portal: rename the app from "Sentri" to "Substrix", update redirect URI(s)
-     for both Development and Production keys to match
-  3. Update the landing page's "Connect to QuickBooks" link (`15446-website/substrix/index.html`) from
-     `sentri-hefh.onrender.com/connect` to `substrix.15446.com/connect`
+- [x] **SSL cert issued**, `https://substrix.15446.com` confirmed live (2026-07-14)
+- [x] **Intuit Developer Portal updated**: app renamed from "Sentri" to "Substrix"; Production redirect URI
+  updated to `https://substrix.15446.com/callback`; Production App URLs (Host domain, Launch, Disconnect,
+  Connect/Reconnect) updated to `substrix.15446.com`
+- [x] **Render `REDIRECT_URI`** env var updated to `https://substrix.15446.com/callback`
+- [x] **Landing page** "Connect to QuickBooks" link updated to `https://substrix.15446.com/connect`
+- [x] **End-to-end verified**: full OAuth flow and all three dashboard modules confirmed working on the
+  new domain with a real QBO company (2026-07-14)
 
 ---
 
