@@ -9,11 +9,16 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
 
+// Render terminates TLS at its proxy, so trust the X-Forwarded-Proto header
+// for the secure-cookie check to work in production
+const isProduction = process.env.ENVIRONMENT === 'production';
+if (isProduction) app.set('trust proxy', 1);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false },
+  cookie: { secure: isProduction, httpOnly: true, sameSite: 'lax' },
 }));
 
 app.use('/', authRoutes);

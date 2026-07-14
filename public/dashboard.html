@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Substrix — Reconciliation Health</title>
+  <title>Substrix — Books Health Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -161,7 +161,7 @@
   <header>
     <div>
       <span class="logo">Substrix</span>
-      <span class="module-label">Reconciliation Health</span>
+      <span class="module-label">Books Health Dashboard</span>
     </div>
     <div class="header-right">
       <span class="fetched-at" id="fetched-at"></span>
@@ -172,6 +172,7 @@
 
   <div id="error-banner" class="error-banner" style="display:none"></div>
 
+  <h2 style="font-size:1.05rem;margin:0 0 12px;">Reconciliation Health</h2>
   <div class="card">
     <div class="loading" id="loading">Loading account data from QuickBooks…</div>
     <table id="table" style="display:none">
@@ -245,6 +246,13 @@
   </p>
 
   <script>
+    // All strings sourced from QBO data (names, doc numbers, types) must pass
+    // through here before being interpolated into innerHTML
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     function fmt(dateStr) {
       if (!dateStr) return '<span class="dim">—</span>';
       const d = new Date(dateStr + 'T00:00:00');
@@ -279,9 +287,9 @@
       const rows = items.map(t => `
         <tr>
           <td>${fmt(t.date)}</td>
-          <td>${t.type || '<span class="dim">—</span>'}</td>
-          <td>${t.name || '<span class="dim">—</span>'}</td>
-          <td>${t.doc || t.docNum || '<span class="dim">—</span>'}</td>
+          <td>${t.type ? esc(t.type) : '<span class="dim">—</span>'}</td>
+          <td>${t.name ? esc(t.name) : '<span class="dim">—</span>'}</td>
+          <td>${(t.doc || t.docNum) ? esc(t.doc || t.docNum) : '<span class="dim">—</span>'}</td>
           <td class="mono">${fmtCurrency(t.amount)}</td>
         </tr>`).join('');
       return `<div class="detail-inner">
@@ -351,8 +359,8 @@
                 <div style="display:flex;align-items:center">
                   ${hasDetail ? expandBtn(key, 5) : '<span class="expand-spacer"></span>'}
                   <div>
-                    <div class="account-name">${a.name}</div>
-                    <div class="account-type">${a.type}</div>
+                    <div class="account-name">${esc(a.name)}</div>
+                    <div class="account-type">${esc(a.type)}</div>
                   </div>
                 </div>
               </td>
@@ -433,8 +441,8 @@
         const { customer, vendor } = await fetchJson('/api/unapplied-transactions');
 
         document.getElementById('ut-tbody').innerHTML =
-          row('Customer (Payments + Credit Memos)', customer, 'ut-customer') +
-          row('Vendor (Credits + Unlinked Payments)', vendor, 'ut-vendor');
+          row('Customer (Payments, Deposits + Credits)', customer, 'ut-customer') +
+          row('Vendor (Credits + Overpayments)', vendor, 'ut-vendor');
 
         document.getElementById('ut-loading').style.display = 'none';
         document.getElementById('ut-table').style.display = 'table';
