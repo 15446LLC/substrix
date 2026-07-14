@@ -21,7 +21,7 @@ router.get('/admin', async (req, res) => {
   if (!pool) return res.send('No database configured — event logging is off.');
 
   try {
-    const [totals, weekly, errors, recent] = await Promise.all([
+    const [totals, weekly, errors, recent, companies] = await Promise.all([
       pool.query(`
         SELECT
           count(DISTINCT realm_id) FILTER (WHERE type = 'connect')  AS realms_ever,
@@ -47,6 +47,15 @@ router.get('/admin', async (req, res) => {
         SELECT created_at, type, realm_id, detail
         FROM events ORDER BY id DESC LIMIT 50
       `),
+      pool.query(`
+        SELECT c.realm_id, c.company_name, c.email, c.city, c.state,
+               c.first_connected, c.last_seen,
+               count(e.id) FILTER (WHERE e.type = 'dashboard_view') AS views
+        FROM companies c
+        LEFT JOIN events e ON e.realm_id = c.realm_id
+        GROUP BY c.realm_id
+        ORDER BY c.last_seen DESC
+      `),
     ]);
 
     const t = totals.rows[0];
@@ -54,6 +63,9 @@ router.get('/admin', async (req, res) => {
       `<tr><td>${esc(r.week.toISOString().slice(0, 10))}</td><td>${r.connects}</td><td>${r.active_realms}</td></tr>`).join('');
     const errorRows = errors.rows.map(r =>
       `<tr><td>${esc(r.type)}</td><td>${esc(r.detail)}</td><td>${r.n}</td><td>${esc(r.last_seen.toISOString().slice(0, 16).replace('T', ' '))}</td></tr>`).join('');
+    const fmtDay = d => d.toISOString().slice(0, 10);
+    const companyRows = companies.rows.map(r =>
+      `<tr><td>${esc(r.company_name || r.realm_id)}</td><td>${esc(r.email)}</td><td>${esc([r.city, r.state].filter(Boolean).join(', '))}</td><td>${fmtDay(r.first_connected)}</td><td>${fmtDay(r.last_seen)}</td><td>${r.views}</td></tr>`).join('');
     const recentRows = recent.rows.map(r =>
       `<tr><td>${esc(r.created_at.toISOString().slice(0, 16).replace('T', ' '))}</td><td>${esc(r.type)}</td><td>${esc(r.realm_id)}</td><td>${esc(r.detail)}</td></tr>`).join('');
 
@@ -75,6 +87,8 @@ router.get('/admin', async (req, res) => {
   <div class="stat"><b>${t.connects}</b>total connects</div>
   <div class="stat"><b>${t.views}</b>dashboard views</div>
 </div>
+<h2>Companies</h2>
+<table><tr><th>Company</th><th>Email</th><th>Location</th><th>First connected</th><th>Last seen</th><th>Views</th></tr>${companyRows || '<tr><td colspan=6>None yet</td></tr>'}</table>
 <h2>Weekly activity (8 weeks)</h2>
 <table><tr><th>Week of</th><th>Connects</th><th>Active companies</th></tr>${weeklyRows || '<tr><td colspan=3>No data yet</td></tr>'}</table>
 <h2>Errors (30 days)</h2>
