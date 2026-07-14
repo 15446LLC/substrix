@@ -117,6 +117,55 @@
     }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .clickable { cursor: pointer; }
+    .clickable:hover { opacity: 0.8; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+      width: 100%;
+      max-width: 760px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 0.95rem; font-weight: 600; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      color: #888;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .modal-close:hover { color: #333; }
+    .modal-body { overflow-y: auto; }
+    .modal-body table { font-size: 0.82rem; }
+    .modal-body thead th { position: sticky; top: 0; }
+    .modal-empty { padding: 32px; text-align: center; color: #888; font-size: 0.875rem; }
   </style>
 </head>
 <body>
@@ -246,9 +295,10 @@
             ? `${fmt(a.lastRecDate)} <span style="color:#aaa;font-size:0.75rem">(${a.daysSinceRec}d ago)</span>`
             : '<span class="dim">Never</span>';
 
+          const txnLabel = `${a.unreconciledCount} transaction${a.unreconciledCount !== 1 ? 's' : ''}`;
           const unreconciledCell = a.unreconciledCount === 0
             ? badge('green', '0 transactions')
-            : badge(a.unreconciledColor, `${a.unreconciledCount} transaction${a.unreconciledCount !== 1 ? 's' : ''}`);
+            : `<span class="clickable" onclick='openModal(${JSON.stringify(a.name + " — Unreconciled Before Last Rec")},${JSON.stringify(a.unreconciledTxns)},TXN_COLS)'>${badge(a.unreconciledColor, txnLabel)}</span>`;
 
           const sumCell = a.unreconciledCount === 0
             ? '<span class="dim">—</span>'
@@ -278,10 +328,45 @@
       }
     }
 
-    function bucketBadge(bucket, color) {
-      return bucket.count === 0
-        ? '<span class="dim">—</span>'
-        : badge(color, `${fmtCurrency(bucket.sum)} (${bucket.count})`);
+    // --- Modal ---
+    function openModal(title, items, columns) {
+      document.getElementById('modal-title').textContent = title;
+      const body = document.getElementById('modal-body');
+      if (!items || items.length === 0) {
+        body.innerHTML = '<div class="modal-empty">No transactions to display.</div>';
+      } else {
+        const headers = columns.map(c => `<th>${c.label}</th>`).join('');
+        const rows = items.map(item =>
+          '<tr>' + columns.map(c => `<td>${c.render(item)}</td>`).join('') + '</tr>'
+        ).join('');
+        body.innerHTML = `
+          <table>
+            <thead><tr>${headers}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+
+    const TXN_COLS = [
+      { label: 'Date',    render: t => fmt(t.date) },
+      { label: 'Type',    render: t => t.type || '<span class="dim">—</span>' },
+      { label: 'Name',    render: t => t.name || '<span class="dim">—</span>' },
+      { label: 'Doc #',   render: t => t.docNum || '<span class="dim">—</span>' },
+      { label: 'Amount',  render: t => `<span class="mono">${fmtCurrency(t.amount)}</span>` },
+    ];
+
+    function bucketBadge(bucket, color, items, title) {
+      if (bucket.count === 0) return '<span class="dim">—</span>';
+      const encoded = items ? encodeURIComponent(JSON.stringify({ title, items })) : null;
+      const click = encoded
+        ? `onclick="const d=JSON.parse(decodeURIComponent('${encoded}'));openModal(d.title,d.items,TXN_COLS)" class="clickable"`
+        : '';
+      return `<span ${click}>${badge(color, `${fmtCurrency(bucket.sum)} (${bucket.count})`)}</span>`;
     }
 
     async function loadUndepositedFunds() {
@@ -311,21 +396,32 @@
     }
 
     async function loadUnappliedTransactions() {
-      const row = (label, data) => `
-        <tr>
-          <td><div class="account-name">${label}</div></td>
-          <td>${bucketBadge(data.buckets.last30Days, 'yellow')}</td>
-          <td>${bucketBadge(data.buckets.last30DaysTo12Months, 'red')}</td>
-          <td>${bucketBadge(data.buckets.over12Months, 'red')}</td>
-          <td>${data.totalSum === 0 ? '<span class="dim">—</span>' : `<span class="mono">${fmtCurrency(data.totalSum)}</span>`}</td>
-        </tr>
-      `;
+      const BUCKET_KEYS = [
+        { key: 'last30Days',           label: '< 30 Days',        color: 'yellow' },
+        { key: 'last30DaysTo12Months', label: '30 Days–12 Months', color: 'red' },
+        { key: 'over12Months',         label: '> 12 Months',       color: 'red' },
+      ];
+
+      const row = (label, data) => {
+        const cells = BUCKET_KEYS.map(b => {
+          const bucket = data.buckets[b.key];
+          const bucketItems = (data.items || []).filter(i => i.bucket === b.key);
+          const title = `${label} — ${b.label}`;
+          return `<td>${bucketBadge(bucket, b.color, bucketItems.length ? bucketItems : null, title)}</td>`;
+        }).join('');
+        const allItems = data.items || [];
+        const totalCell = data.totalSum === 0
+          ? '<span class="dim">—</span>'
+          : `<span class="mono clickable" onclick="openModal('${label}',${JSON.stringify(allItems)},TXN_COLS)">${fmtCurrency(data.totalSum)}</span>`;
+        return `<tr><td><div class="account-name">${label}</div></td>${cells}<td>${totalCell}</td></tr>`;
+      };
 
       try {
         const { customer, vendor } = await fetchJson('/api/unapplied-transactions');
 
         document.getElementById('ut-tbody').innerHTML =
-          row('Customer (Payments + Credit Memos)', customer) + row('Vendor (Credits + Unlinked Payments)', vendor);
+          row('Customer (Payments + Credit Memos)', customer) +
+          row('Vendor (Credits + Unlinked Payments)', vendor);
 
         document.getElementById('ut-loading').style.display = 'none';
         document.getElementById('ut-table').style.display = 'table';
@@ -338,5 +434,16 @@
     loadUndepositedFunds();
     loadUnappliedTransactions();
   </script>
+
+  <div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title"></span>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
 </body>
 </html>
