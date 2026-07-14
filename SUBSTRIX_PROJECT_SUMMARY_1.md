@@ -84,12 +84,35 @@ Displays a list of all accounts that require reconciliation (bank accounts, cred
 - **Not yet tested**: Real QBO account connection via production credentials (next step — click "Connect to QuickBooks" on the live URL and log in with real Intuit account).
 
 ### Known gaps / follow-ups
-- Reconciliation integrity (broken-rec detection) — not built yet (planned v2 per notes above).
-- No handling for expired refresh tokens / invalid grant errors — currently surfaces as generic 500.
-- No CSRF state validation on OAuth callback (`state=sentri` is set but not checked).
-- `intuit_tid` not captured from QBO response headers for support/troubleshooting.
-- No in-app support/contact link.
-- Sessions are in-memory (`express-session` with no store) — restarts log everyone out; fine for now, revisit before real users.
+- Reconciliation integrity (broken-rec detection) — partially covered: the "Unreconciled Before Last Rec" check catches edited/un-reconciled transactions, but not outright deletions.
+- ~~No handling for expired refresh tokens~~ — fixed: `QboAuthExpiredError` surfaces a reconnect prompt.
+- ~~No CSRF state validation on OAuth callback~~ — fixed 2026-07-14: random state generated per /connect, verified on callback.
+- `intuit_tid` is captured and logged on QBO errors.
+- Support link (mailto) added to dashboard header.
+- ~~Sessions are in-memory~~ — fixed 2026-07-14: Postgres-backed sessions via connect-pg-simple (Neon free tier), survive deploys/restarts. 30-day cookie.
+
+### Update — 2026-07-14: Overpayment detection, security hardening, monitoring
+
+**Unapplied module now uses aging reports.** The old vendor check (BillPayments with no linked Bill)
+produced false positives on legitimate standalone payments and missed real overpayments. Replaced with
+parsing `AgedPayableDetail` / `AgedReceivableDetail` for negative open balances — this catches vendor
+overpayments (e.g. a check paid beyond the bill amount) and customer-side unapplied Deposits that the
+entity fields (`Payment.UnappliedAmt`, `CreditMemo.Balance`, `VendorCredit.Balance`) can't see. Rows whose
+types the entity checks already cover are skipped to avoid double-counting. NOTE: these two aging report
+endpoints work fine with current API access (unlike ReconciliationDetail/TaxSummary, which 5020) — but the
+code degrades to entity-only checks if a company's plan denies them. Column-key quirk: A/P aging uses
+`subt_neg_open_bal`, A/R aging uses `subt_open_bal`.
+
+**Security fixes from full code review:** XSS escaping on all QBO-sourced strings in the dashboard;
+secure/httpOnly/sameSite session cookie in production (with `trust proxy` for Render); OAuth token
+refreshes coalesced per realm (Intuit rotates refresh tokens — parallel refreshes could kill the session).
+
+**Monitoring added.** Postgres (Neon free tier, `DATABASE_URL` env var on Render) now backs sessions and
+an `events` table. Events logged: connect, connect_error, disconnect, dashboard_view, auth_expired,
+api_error. Admin page at `/admin?key=ADMIN_KEY` (env var) shows companies connected, weekly activity,
+error rollup, recent events. Verified end-to-end on the live app 2026-07-14. Rationale: Intuit's portal
+shows API call volume and connection counts, but not per-company activity, return visits, or error
+specifics — this fills that gap from day one.
 
 ### QBO API Reconciliation Data — Known Limitation (as of 2026-06-15)
 The QBO API does not expose reconciliation dates or clearing status through any of the following:
