@@ -2,7 +2,7 @@ const express = require('express');
 const { buildReconciliationHealth } = require('../lib/reconciliation');
 const { buildUndepositedFundsHealth } = require('../lib/undepositedFunds');
 const { buildUnappliedTransactionsHealth } = require('../lib/unappliedTransactions');
-const { QboAuthExpiredError, getValidToken } = require('../lib/qbo');
+const { QboAuthExpiredError } = require('../lib/qbo');
 const router = express.Router();
 
 function requireAuth(req, res, next) {
