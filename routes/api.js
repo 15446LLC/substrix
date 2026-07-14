@@ -47,14 +47,4 @@ router.get('/api/unapplied-transactions', requireAuth, async (req, res) => {
 });
 
 
-router.get('/api/debug-ar-aging', requireAuth, async (req, res) => {
-  try {
-    const { fetchAgedReceivableDetail } = require('../lib/qbo');
-    const data = await fetchAgedReceivableDetail(req.session);
-    res.json(data);
-  } catch (err) {
-    handleQboError('AR aging probe', err, req, res);
-  }
-});
-
 module.exports = router;
