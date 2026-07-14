@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Substrix — Books Health</title>
+  <title>Substrix — Disconnected</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -19,7 +19,7 @@
       background: #fff;
       border-radius: 12px;
       padding: 48px 56px;
-      max-width: 440px;
+      max-width: 480px;
       width: 100%;
       box-shadow: 0 2px 16px rgba(0,0,0,0.08);
       text-align: center;
@@ -30,29 +30,43 @@
       letter-spacing: -0.5px;
       margin-bottom: 8px;
     }
-    .tagline {
+    .message {
       font-size: 0.95rem;
       color: #555;
-      margin-bottom: 36px;
+      margin-bottom: 12px;
+      line-height: 1.5;
     }
-    .connect-btn { display: inline-block; transition: opacity 0.15s; }
-    .connect-btn:hover { opacity: 0.9; }
-    .connect-btn img { display: block; width: 240px; max-width: 100%; height: auto; }
+    .submessage {
+      font-size: 0.85rem;
+      color: #777;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+    .connect-link { display: inline-block; transition: opacity 0.15s; }
+    .connect-link:hover { opacity: 0.9; }
+    .connect-link img { display: block; width: 240px; max-width: 100%; height: auto; }
     .footnote {
       margin-top: 28px;
       font-size: 0.78rem;
       color: #888;
     }
+    .footnote a { color: #666; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="logo">Substrix</div>
-    <p class="tagline">Books health monitoring for QuickBooks Online</p>
-    <a class="connect-btn" href="/connect" aria-label="Connect to QuickBooks">
+    <p class="message">Your QuickBooks Online company has been disconnected from Substrix.</p>
+    <p class="submessage">
+      Substrix no longer has access to your QuickBooks data. To start monitoring
+      your books health again, reconnect at any time.
+    </p>
+    <a class="connect-link" href="/connect" aria-label="Connect to QuickBooks">
       <img src="/assets/C2QB_green_btn_lg_default.png" alt="Connect to QuickBooks" />
     </a>
-    <p class="footnote">You'll be redirected to Intuit to authorize access.</p>
+    <p class="footnote">
+      Questions? <a href="mailto:i@15446.com?subject=Substrix%20Support">Contact support</a>
+    </p>
   </div>
 </body>
 </html>

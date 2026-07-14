@@ -10,7 +10,9 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static('public'));
+// index: false so `/` falls through to the session-aware route in auth.js
+// (connected users get the dashboard, not the Connect page — requirement 1.1)
+app.use(express.static('public', { index: false }));
 
 // Render terminates TLS at its proxy, so trust the X-Forwarded-Proto header
 // for the secure-cookie check to work in production

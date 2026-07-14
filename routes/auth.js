@@ -6,6 +6,12 @@ const createOAuthClient = require('../lib/oauthClient');
 const { logEvent } = require('../lib/events');
 const router = express.Router();
 
+// Connected users skip the Connect page and land on the dashboard
+router.get('/', (req, res) => {
+  if (req.session.token) return res.redirect('/dashboard');
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 router.get('/connect', (req, res) => {
   const state = crypto.randomBytes(16).toString('hex');
   req.session.oauthState = state;
@@ -44,10 +50,28 @@ router.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/dashboard.html'));
 });
 
-router.get('/disconnect', (req, res) => {
+router.get('/disconnect', async (req, res) => {
   logEvent('disconnect', req.session.realmId);
-  req.session.destroy();
-  res.redirect('/');
+  // Marketplace requirement 2.3: disconnecting must revoke the OAuth grant at
+  // Intuit, not just clear the local session
+  if (req.session.token) {
+    try {
+      const client = createOAuthClient();
+      client.setToken(req.session.token);
+      await client.revoke();
+    } catch (err) {
+      console.error('Token revoke failed (continuing with local disconnect):', err.message);
+    }
+  }
+  req.session.destroy(() => res.redirect('/disconnected'));
+});
+
+// Also the target for Intuit-initiated disconnects (the Disconnect URL
+// registered in the developer portal) — those arrive with ?realmId= and no
+// session, so this must work statelessly. Marketplace requirement 5.3.
+router.get('/disconnected', (req, res) => {
+  if (req.query.realmId) logEvent('disconnect_via_intuit', req.query.realmId);
+  res.sendFile(path.join(__dirname, '../public/disconnected.html'));
 });
 
 module.exports = router;
