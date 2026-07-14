@@ -34,9 +34,11 @@ app.use(session({
   },
 }));
 
+// Admin routes first: they claim '/' on the admin hostname
+// (admin.15446.com) and pass through everywhere else
+app.use('/', adminRoutes);
 app.use('/', authRoutes);
 app.use('/', apiRoutes);
-app.use('/', adminRoutes);
 
 initDb()
   .catch(err => console.error('Database init failed:', err.message))
