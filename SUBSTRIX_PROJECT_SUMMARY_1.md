@@ -69,7 +69,7 @@ Displays a list of all accounts that require reconciliation (bank accounts, cred
 9. ✅ Build reconciliation data logic
 10. ✅ Build unreconciled transaction logic + health scoring
 11. ✅ Build frontend dashboard
-12. ✅ Deploy to live URL — https://sentri-hefh.onrender.com (Render free tier)
+12. ✅ Deploy to live URL — https://substrix.15446.com (Render free tier; onrender.com hostname sentri-hefh behind it)
 13. ⏸️ Submit to Intuit App Marketplace — deferred (see 2026-07-14 Marketplace update below)
 
 ---
@@ -187,13 +187,35 @@ distribution (substrix.15446.com + own marketing to bookkeepers/accountants). Re
 listing when usage or revenue justifies it — all technical prep is done, so submission later requires no
 rework. Note the portal banner: Gold/Platinum tier qualification no longer requires a marketplace listing.
 
+### Update — 2026-07-14 (later): Direct-distribution posture — landing page, company capture, admin hub
+
+- **Landing page merged into the app domain**: `substrix.15446.com` is now the single URL — value prop,
+  illustrative dashboard preview (sample data only, never client financials), three-module feature cards,
+  how-it-works, official Connect button. `15446.com/substrix` redirects there; privacy-policy and terms
+  pages remain hosted on 15446.com.
+- **Company identity capture**: on each OAuth connect, `CompanyInfo` is fetched and upserted into a
+  `companies` table (name, email, city/state, first_connected, last_seen). Dashboard views bump last_seen.
+  NOTE: privacy policy should be updated to disclose retention of company contact info + usage events
+  (not yet done).
+- **Admin hub at admin.15446.com**: host-based routing in the same Node app; password login (ADMIN_KEY as
+  password, session-backed, 30-day cookie) replaces the old `?key=` URL param. Hub shows a card per app;
+  `/substrix` panel has companies/weekly activity/errors/recent events. Custom domain + GoDaddy CNAME
+  (`admin` → `sentri-hefh.onrender.com`) verified live 2026-07-14. Local dev: `admin.localhost:3000`.
+  An "Admin" link sits in the 15446.com footer; the Substrix footer copyright links back to 15446.com.
+- **User model note**: users authenticate solely via Intuit OAuth — no Substrix accounts. Decision: keep it
+  that way until multi-company support creates a real need; the companies table serves as the customer list.
+
+**Open items**: Intuit portal Disconnect URL still needs pointing at `https://substrix.15446.com/disconnected`
+(user action, 30 seconds); privacy policy disclosure update; Render paid tier (~$7/mo) to kill cold starts
+before actively sharing the link.
+
 ---
 
 ## Intuit Developer Portal
 
 - **Portal:** developer.intuit.com
 - **Workspace:** 15446
-- **App Name:** Sentri (not yet renamed in the Intuit Developer Portal — see Naming Update below)
+- **App Name:** Substrix (renamed in the portal 2026-07-14)
 - **App ID:** 0c2db838-0028-49e3-b48e-45a3af7e0004
 - **Status:** In Development
 - **Redirect URI (Development):** `http://localhost:3000/callback`
