@@ -4,6 +4,7 @@ const { buildUndepositedFundsHealth } = require('../lib/undepositedFunds');
 const { buildUnappliedTransactionsHealth } = require('../lib/unappliedTransactions');
 const { QboAuthExpiredError } = require('../lib/qbo');
 const { logEvent } = require('../lib/events');
+const { pool } = require('../lib/db');
 const router = express.Router();
 
 function requireAuth(req, res, next) {
@@ -49,5 +50,22 @@ router.get('/api/unapplied-transactions', requireAuth, async (req, res) => {
   }
 });
 
+
+router.post('/api/feedback', requireAuth, express.json({ limit: '10kb' }), async (req, res) => {
+  const message = (req.body?.message || '').trim().slice(0, 2000);
+  if (!message) return res.status(400).json({ error: 'Message is required' });
+  if (!pool) return res.status(503).json({ error: 'Feedback is unavailable right now' });
+  try {
+    await pool.query(
+      'INSERT INTO feedback (realm_id, message) VALUES ($1, $2)',
+      [req.session.realmId || null, message]
+    );
+    logEvent('feedback', req.session.realmId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Feedback save failed:', err);
+    res.status(500).json({ error: 'Could not save feedback' });
+  }
+});
 
 module.exports = router;

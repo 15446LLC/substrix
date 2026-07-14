@@ -104,7 +104,7 @@ router.get('/substrix', requireAdminHost, requireAdminAuth, async (req, res) => 
   if (!pool) return res.send(page('Substrix Admin', '<p>No database configured — event logging is off.</p>'));
 
   try {
-    const [totals, weekly, errors, recent, companies] = await Promise.all([
+    const [totals, weekly, errors, recent, companies, feedback] = await Promise.all([
       pool.query(`
         SELECT
           count(DISTINCT realm_id) FILTER (WHERE type = 'connect')  AS realms_ever,
@@ -139,6 +139,12 @@ router.get('/substrix', requireAdminHost, requireAdminAuth, async (req, res) => 
         GROUP BY c.realm_id
         ORDER BY c.last_seen DESC
       `),
+      pool.query(`
+        SELECT f.created_at, f.message, c.company_name, f.realm_id
+        FROM feedback f
+        LEFT JOIN companies c ON c.realm_id = f.realm_id
+        ORDER BY f.id DESC LIMIT 50
+      `),
     ]);
 
     const t = totals.rows[0];
@@ -150,6 +156,8 @@ router.get('/substrix', requireAdminHost, requireAdminAuth, async (req, res) => 
       `<tr><td>${esc(fmtDay(r.week))}</td><td>${r.connects}</td><td>${r.active_realms}</td></tr>`).join('');
     const errorRows = errors.rows.map(r =>
       `<tr><td>${esc(r.type)}</td><td>${esc(r.detail)}</td><td>${r.n}</td><td>${esc(fmtMin(r.last_seen))}</td></tr>`).join('');
+    const feedbackRows = feedback.rows.map(r =>
+      `<tr><td>${esc(fmtMin(r.created_at))}</td><td>${esc(r.company_name || r.realm_id)}</td><td>${esc(r.message)}</td></tr>`).join('');
     const recentRows = recent.rows.map(r =>
       `<tr><td>${esc(fmtMin(r.created_at))}</td><td>${esc(r.type)}</td><td>${esc(r.realm_id)}</td><td>${esc(r.detail)}</td></tr>`).join('');
 
@@ -162,6 +170,8 @@ router.get('/substrix', requireAdminHost, requireAdminAuth, async (req, res) => 
       </div>
       <h2>Companies</h2>
       <table><tr><th>Company</th><th>Email</th><th>Location</th><th>First connected</th><th>Last seen</th><th>Views</th></tr>${companyRows || '<tr><td colspan=6>None yet</td></tr>'}</table>
+      <h2>Feedback</h2>
+      <table><tr><th>Time (UTC)</th><th>Company</th><th>Message</th></tr>${feedbackRows || '<tr><td colspan=3>None yet</td></tr>'}</table>
       <h2>Weekly activity (8 weeks)</h2>
       <table><tr><th>Week of</th><th>Connects</th><th>Active companies</th></tr>${weeklyRows || '<tr><td colspan=3>No data yet</td></tr>'}</table>
       <h2>Errors (30 days)</h2>
