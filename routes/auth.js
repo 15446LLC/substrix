@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const OAuthClient = require('intuit-oauth');
 const createOAuthClient = require('../lib/oauthClient');
+const { logEvent } = require('../lib/events');
 const router = express.Router();
 
 router.get('/connect', (req, res) => {
@@ -28,19 +29,23 @@ router.get('/callback', async (req, res) => {
     const authResponse = await createOAuthClient().createToken(req.url);
     req.session.token = authResponse.getJson();
     req.session.realmId = req.query.realmId;
+    logEvent('connect', req.query.realmId);
     res.redirect('/dashboard');
   } catch (err) {
     console.error('OAuth callback error:', err);
+    logEvent('connect_error', req.query.realmId, err.message);
     res.status(500).send('Authentication failed. Check the console for details.');
   }
 });
 
 router.get('/dashboard', (req, res) => {
   if (!req.session.token) return res.redirect('/');
+  logEvent('dashboard_view', req.session.realmId);
   res.sendFile(path.join(__dirname, '../public/dashboard.html'));
 });
 
 router.get('/disconnect', (req, res) => {
+  logEvent('disconnect', req.session.realmId);
   req.session.destroy();
   res.redirect('/');
 });

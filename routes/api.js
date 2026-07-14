@@ -3,6 +3,7 @@ const { buildReconciliationHealth } = require('../lib/reconciliation');
 const { buildUndepositedFundsHealth } = require('../lib/undepositedFunds');
 const { buildUnappliedTransactionsHealth } = require('../lib/unappliedTransactions');
 const { QboAuthExpiredError } = require('../lib/qbo');
+const { logEvent } = require('../lib/events');
 const router = express.Router();
 
 function requireAuth(req, res, next) {
@@ -13,9 +14,11 @@ function requireAuth(req, res, next) {
 function handleQboError(label, err, req, res) {
   if (err instanceof QboAuthExpiredError) {
     req.session.token = null;
+    logEvent('auth_expired', req.session.realmId, label);
     return res.status(401).json({ error: err.message, reconnect: true });
   }
   console.error(`${label} error:`, err);
+  logEvent('api_error', req.session.realmId, `${label}: ${err.message}`.slice(0, 500));
   res.status(500).json({ error: err.message });
 }
 
