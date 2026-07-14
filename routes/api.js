@@ -46,19 +46,5 @@ router.get('/api/unapplied-transactions', requireAuth, async (req, res) => {
   }
 });
 
-router.get('/api/debug-ap-aging', requireAuth, async (req, res) => {
-  try {
-    const { getValidToken, qboGet } = require('../lib/qbo');
-    const token = await getValidToken(req.session);
-    const today = new Date().toISOString().slice(0, 10);
-    const path = `/v3/company/${req.session.realmId}/reports/AgedPayableDetail`
-      + `?report_date=${today}`
-      + `&minorversion=65`;
-    const data = await qboGet(path, token);
-    res.json(data);
-  } catch (err) {
-    handleQboError('AP aging probe', err, req, res);
-  }
-});
 
 module.exports = router;
