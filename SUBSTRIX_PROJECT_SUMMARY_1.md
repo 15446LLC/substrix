@@ -70,7 +70,7 @@ Displays a list of all accounts that require reconciliation (bank accounts, cred
 10. ✅ Build unreconciled transaction logic + health scoring
 11. ✅ Build frontend dashboard
 12. ✅ Deploy to live URL — https://sentri-hefh.onrender.com (Render free tier)
-13. ⬜ Submit to Intuit App Marketplace
+13. ⏸️ Submit to Intuit App Marketplace — deferred (see 2026-07-14 Marketplace update below)
 
 ---
 
@@ -161,6 +161,31 @@ Added `/api/debug-sales-tax` to probe what's available. Findings:
 **Scoped-down alternative discussed but not yet built**: since we can't get QBO's computed liability, fall back to checking what we *can* see — surface each Sales Tax Payable account's balance per jurisdiction, flag any negative balance (sign anomaly — a state owing the business money is suspicious), and flag balances that haven't changed in 90+ days (likely a missed filing/payment). This reuses the age-bucketing pattern from Modules 2/3 but can only flag "something looks off," not confirm the dollar amount is mathematically correct.
 
 **Next session should start by**: deciding whether to build the scoped-down version (negative/stale balance checks only) or first investigate the 5020 wall further (e.g. try a fresh OAuth reconnect immediately before calling the report, to rule out a stale-token cause) — same open question as the reconciliation integrity report wall.
+
+### Update — 2026-07-14: Marketplace submission deferred — listing now costs $300/mo
+
+Prepared for App Store submission and completed all code-side technical requirements:
+- `/disconnect` now calls Intuit's token revoke endpoint (requirement 2.3), landing on a new
+  `/disconnected` static page (requirement 5.3) that also serves as the portal's Disconnect URL target.
+- Landing + disconnected pages use the official "Connect to QuickBooks" button artwork
+  (`public/assets/C2QB_green_btn_lg_default.png`, sourced from intuit/oauth-jsclient) — requirement 1.3.
+- Connected users visiting `/` are redirected to the dashboard (Connect button hidden once connected —
+  requirement 1.1). `express.static` uses `index: false` so the session-aware route handles `/`.
+- Decision: app will be **free** (single Free plan) whenever listed.
+- App card copy drafted (tagline, benefits, FAQs, pricing, support) — in session notes, not yet entered
+  into the portal.
+
+**Blocker discovered in the portal's Marketplace tab**: Intuit restructured the App Partner Program.
+Marketplace listing now requires the **Silver tier at $300/month + variable API fees** (Gold $1,700/mo,
+Platinum $4,500/mo). The free **Builder** tier (current plan) includes production keys, 500K CorePlus API
+calls/month, and unlimited direct connections — everything except the App Store listing itself. Profile
+and production-keys prerequisites on the Marketplace checklist are complete; only the paid subscription
+gate remains.
+
+**Decision**: stay on Builder (free), skip the listing for now, and pursue traction through direct
+distribution (substrix.15446.com + own marketing to bookkeepers/accountants). Revisit the $300/mo Silver
+listing when usage or revenue justifies it — all technical prep is done, so submission later requires no
+rework. Note the portal banner: Gold/Platinum tier qualification no longer requires a marketplace listing.
 
 ---
 
