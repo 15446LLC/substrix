@@ -91,7 +91,7 @@ router.get('/admin/logout', requireAdminHost, (req, res) => {
 // their own admin, or to a panel route added below like /substrix.
 router.get('/', requireAdminHost, requireAdminAuth, (req, res) => {
   res.send(page('15446 Admin', `
-    <div class="topbar"><h1>15446 Admin</h1><a href="/admin/logout">Sign out</a></div>
+    <div class="topbar"><h1>15446 Admin</h1><span><a href="https://15446.com">15446.com</a> &nbsp; <a href="/admin/logout">Sign out</a></span></div>
     <div class="apps">
       <a class="app-card" href="/substrix">
         <h3>Substrix</h3>
