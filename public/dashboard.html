@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Substrix — Books Health Dashboard</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/substrix-logo-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/substrix-logo-16.png" />
+  <link rel="apple-touch-icon" href="/assets/substrix-logo-180.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -233,9 +236,12 @@
 <body>
 
   <header>
-    <div>
-      <span class="logo">Substrix</span>
-      <span class="module-label" id="company-label">Books Health Dashboard</span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="/assets/substrix-logo-64.png" alt="" style="width:34px;height:34px;border-radius:8px;" />
+      <div>
+        <span class="logo">Substrix</span>
+        <span class="module-label" id="company-label">Books Health Dashboard</span>
+      </div>
     </div>
     <div class="header-right">
       <span class="fetched-at" id="fetched-at"></span>
