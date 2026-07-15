@@ -235,10 +235,11 @@
   <header>
     <div>
       <span class="logo">Substrix</span>
-      <span class="module-label">Books Health Dashboard</span>
+      <span class="module-label" id="company-label">Books Health Dashboard</span>
     </div>
     <div class="header-right">
       <span class="fetched-at" id="fetched-at"></span>
+      <a class="disconnect" href="/connect" title="Connect a different QuickBooks company">Switch company</a>
       <a class="pdf-btn" href="/api/report.pdf" id="pdf-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -578,9 +579,21 @@
       }
     }
 
+    async function loadCompanyName() {
+      try {
+        const { name } = await fetchJson('/api/company');
+        if (name) {
+          const label = document.getElementById('company-label');
+          label.textContent = name;
+          label.title = 'Books Health Dashboard';
+        }
+      } catch (err) { /* keep the default label */ }
+    }
+
     load();
     loadUndepositedFunds();
     loadUnappliedTransactions();
+    loadCompanyName();
   </script>
 </body>
 </html>

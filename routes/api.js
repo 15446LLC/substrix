@@ -51,6 +51,16 @@ router.get('/api/unapplied-transactions', requireAuth, async (req, res) => {
 });
 
 
+router.get('/api/company', requireAuth, async (req, res) => {
+  try {
+    const { fetchCompanyInfo } = require('../lib/qbo');
+    const info = await fetchCompanyInfo(req.session);
+    res.json({ name: info?.CompanyName || null });
+  } catch (err) {
+    handleQboError('Company info fetch', err, req, res);
+  }
+});
+
 router.get('/api/report.pdf', requireAuth, async (req, res) => {
   try {
     const { generatePdfReport } = require('../lib/pdfReport');
