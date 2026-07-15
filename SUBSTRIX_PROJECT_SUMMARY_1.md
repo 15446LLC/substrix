@@ -279,6 +279,15 @@ external steps happen.
 
 ---
 
+## Branding — 2026-07-15
+
+Logo selected: hexagon badge with a white ribbon-S in negative space, blue/green palette on navy
+(Midjourney-generated, user-selected from ~8 candidates). Master at `public/assets/substrix-logo-1024.png`
+with sized exports (16/32/64/100/180/512). Integrated: landing hero, dashboard header, disconnected page,
+PDF report title block, favicons + apple-touch-icon on all pages, Open Graph tags, 15446.com app card,
+and the Intuit Developer Portal app logo. The raster master is the source of truth — if a vector version
+is ever needed (print, large format), have a designer trace it.
+
 ## Notes
 
 - The reconciliation integrity check (detecting whether a reconciliation has been broken after the fact) is the most technically complex feature and may move to v2.
