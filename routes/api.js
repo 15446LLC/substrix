@@ -51,6 +51,21 @@ router.get('/api/unapplied-transactions', requireAuth, async (req, res) => {
 });
 
 
+router.get('/api/report.pdf', requireAuth, async (req, res) => {
+  try {
+    const { generatePdfReport } = require('../lib/pdfReport');
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="substrix-report-${date}.pdf"`);
+    logEvent('report_download', req.session.realmId);
+    await generatePdfReport(req.session, res);
+  } catch (err) {
+    if (!res.headersSent) return handleQboError('PDF report', err, req, res);
+    console.error('PDF report error mid-stream:', err);
+    res.end();
+  }
+});
+
 router.post('/api/feedback', requireAuth, express.json({ limit: '10kb' }), async (req, res) => {
   const message = (req.body?.message || '').trim().slice(0, 2000);
   if (!message) return res.status(400).json({ error: 'Message is required' });
