@@ -32,6 +32,22 @@
     .disconnect { font-size: 0.8rem; color: #888; text-decoration: none; }
     .disconnect:hover { color: #333; }
 
+    .pdf-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #1a1a1a;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 7px;
+      transition: background 0.15s;
+    }
+    .pdf-btn:hover { background: #333; }
+    .pdf-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
     .card {
       background: #fff;
       border-radius: 10px;
@@ -223,7 +239,14 @@
     </div>
     <div class="header-right">
       <span class="fetched-at" id="fetched-at"></span>
-      <a class="disconnect" href="/api/report.pdf" id="pdf-link">Download PDF report</a>
+      <a class="pdf-btn" href="/api/report.pdf" id="pdf-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download PDF report
+      </a>
       <a class="disconnect" href="mailto:i@15446.com?subject=Substrix%20Support">Support</a>
       <a class="disconnect" href="/disconnect">Disconnect</a>
     </div>
