@@ -279,6 +279,31 @@ external steps happen.
 
 ---
 
+## Monetization plan (decided 2026-07-15, NOT yet in effect — everything is free for now)
+
+Freemium structure agreed with Isaac, to be built only after meaningful free usage develops:
+
+| | Free | Pro |
+|---|---|---|
+| Companies | Up to 5 | Unlimited |
+| Dashboard views | 10 "check-days" per company per month (count ≤1 view/company/day) | Unlimited |
+| Scheduled email digests + red-flag alerts | — | ✓ |
+| PDF reports | Substrix-branded | White-label (firm's own logo) |
+
+Decisions and rationale:
+- Multi-company stays free (up to 5) — maximizes bookkeeper adoption; monetize convenience, not access.
+- View cap meters intent (distinct days, not page loads) so refreshes don't burn quota. 10 lets weekly
+  checkers + a month-end-close burst live free; daily monitors hit it — and they're exactly who the paid
+  digest/alert features serve. Calibrate the number against the events table once there are 20–30 users
+  (target: just above the 80th percentile of casual usage).
+- Soft wall with upgrade pitch, never a hard lockout.
+- **Build prerequisite**: company caps need user identity. Plan: add OpenID scopes (`openid email`) to the
+  OAuth request so each connect records user↔company invisibly — no signup, no passwords. Do this BEFORE
+  any enforcement so history exists. Other prerequisites: Stripe (payments), an email service
+  (Resend/Postmark) + scheduler for digests, logo upload for white-label PDF.
+- Pricing shape sketched: ~$5–8/company/mo or ~$29/mo unlimited; ~15–20 paying users would also cover the
+  $300/mo Intuit Marketplace listing if that gets revisited.
+
 ## Branding — 2026-07-15
 
 Logo selected: hexagon badge with a white ribbon-S in negative space, blue/green palette on navy
